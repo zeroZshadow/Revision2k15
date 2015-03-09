@@ -1,0 +1,15 @@
+*.opensdf
+*.sdf
+*.suo
+*.dol
+*.elf
+*.log
+*.dSYM
+*.o
+*.swp
+
+/obj
+/exe
+/docs
+/tools/Emulator
+/tools/obj2bin
