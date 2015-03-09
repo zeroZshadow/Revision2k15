@@ -85,9 +85,9 @@ void MODEL_destroy(model_t* model) {
 
 void MODEL_render(model_t* model) {
 	if (model == NULL) return;
-	if (model->textureObject != NULL) {
+	//if (model->textureObject != NULL) {
 		GX_LoadTexObj(model->textureObject, GX_TEXMAP0);
-	}
+	//}
 	GX_CallDispList(model->modelList, model->modelListSize);
 }
 

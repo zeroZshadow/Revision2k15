@@ -6,6 +6,7 @@
 #include "gxutils.h"
 #include "mathutil.h"
 #include "font.h"
+#include "sprite.h"
 
 /* Data vars */
 GXTexObj terrainTexObj, fontTexObj;
@@ -20,12 +21,13 @@ void SCENE_load() {
 	/* Setup spectator matrix */
 	GXU_setupCamera(&mainCamera, 1, 1);
 	GX_SetViewport(mainCamera.offsetLeft, mainCamera.offsetTop, mainCamera.width, mainCamera.height, 0, 1);
-	guVector cameraPos = { 0, 0, 0 };
-	guVector targetPos = { 0, -10, 0 };
+	guVector cameraPos = { 0, 0, -10 };
+	guVector targetPos = { 0, 0, 0 };
 	guVector cameraUp = { 0, 1, 0 };
 	guLookAt(mainView, &cameraPos, &cameraUp, &targetPos);
 
 	FONT_init();
+	SPRITE_init();
 
 	DEMO_init();
 }
@@ -41,7 +43,7 @@ void SCENE_render() {
 	DEMO_update();
 
 	//Render scene
-	DEMO_render();
+	DEMO_render(mainView);
 
 	/* Flip framebuffer */
 	GXU_done();

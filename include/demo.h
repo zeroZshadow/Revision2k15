@@ -4,6 +4,8 @@
 #ifndef _DEMO_H
 #define _DEMO_H
 
+#include <ogc/gu.h>
+
 /*! \brief Initialize demo data
  */
 void DEMO_init();
@@ -14,6 +16,6 @@ void DEMO_update();
 
 /*! \brief Render demo
 */
-void DEMO_render();
+void DEMO_render(Mtx viewMtx);
 
 #endif

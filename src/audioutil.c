@@ -16,3 +16,11 @@ void AU_playMusic(const void* music) {
 	MODPlay_SetMOD(&play, music);
 	MODPlay_Start(&play);
 }
+
+u32 AU_getChannelPos(u32 index) {
+	return play.mod.playpos[index];
+}
+
+u32 AU_getSongPos() {
+	return play.mod.samplescounter;
+}
