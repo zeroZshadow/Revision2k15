@@ -8,24 +8,35 @@
 #include "textures.h"
 #include "model.h"
 #include "font.h"
+#include "object.h"
 
 //Data
+#include "symbol_bmb.h"
 #include "music_mod.h"
 
 /* Data vars */
+model_t *modelSymbol;
+object_t *objectSymbol;
 GXTexObj terrainTexObj, fontTexObj;
 font_t* font;
 
 void DEMO_init() {
+	//Textures
 	GXU_loadTexture(terrainTex, &terrainTexObj);
 	GXU_loadTexture(ubuntuFontTex, &fontTexObj);
 
-	FONT_init();
+	//Meshes
+	modelSymbol = MODEL_setup(symbol_bmb);
+
+	//Objects
+	objectSymbol = OBJECT_create(modelSymbol);
+
+	//Fonts
 	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256);
 
+	//Start music
 	AU_playMusic(music_mod);
 }
-
 
 void DEMO_update() {
 }

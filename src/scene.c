@@ -5,6 +5,7 @@
 #include "demo.h"
 #include "gxutils.h"
 #include "mathutil.h"
+#include "font.h"
 
 /* Data vars */
 GXTexObj terrainTexObj, fontTexObj;
@@ -23,6 +24,8 @@ void SCENE_load() {
 	guVector targetPos = { 0, -10, 0 };
 	guVector cameraUp = { 0, 1, 0 };
 	guLookAt(mainView, &cameraPos, &cameraUp, &targetPos);
+
+	FONT_init();
 
 	DEMO_init();
 }
