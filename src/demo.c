@@ -2,6 +2,7 @@
 
 #include <malloc.h>
 #include <gccore.h>
+#include <math.h>
 
 //Structures
 #include "audioutil.h"
@@ -22,6 +23,8 @@ sprite_t* spriteBackground;
 GXTexObj whiteTexObj, backgroundTexObj, fontTexObj;
 font_t* font;
 
+int framenr = 0;
+
 /* Light */
 static GXColor lightColor[] = {
 	{ 0xF0, 0xF0, 0xF0, 0xff }, /* Light color   */
@@ -40,42 +43,51 @@ void DEMO_init() {
 	MODEL_setTexture(modelSymbol, &whiteTexObj);
 
 	//Sprites
-	spriteBackground = SPRITE_create();
-	f32 pos[2] = { 0, 0 };
-	f32 size[2] = { 256, 256 };
-	SPRITE_setTexture(spriteBackground, &backgroundTexObj, pos, size, 1024);
+	spriteBackground = SPRITE_create(0, 0, 640, 528);
+	SPRITE_setTexture(spriteBackground, &backgroundTexObj);
 
 	//Objects
 	objectSymbol = OBJECT_create(modelSymbol);
 
 	//Symbol
 	OBJECT_scaleTo(objectSymbol, .4f, .4f, .4f);
-	OBJECT_moveTo(objectSymbol, 0, 0, 50);
+	OBJECT_moveTo(objectSymbol, 30, 10, 80);
 
 	//Fonts
 	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256);
 
 	//Start music
-	AU_playMusic(music_mod);
+	//AU_playMusic(music_mod);
 }
 
 void DEMO_update() {
-	OBJECT_rotate(objectSymbol, 0, .01f, 0);
+	//OBJECT_rotate(objectSymbol, 0, .01f, 0);
+	framenr++;
 }
 
-void DEMO_render(Mtx viewMtx) {
+void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
+	/* Render background */
+	/* Disable Zbuf */
+	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
+	SPRITE_render(spriteBackground);
 
 	/* Set default blend mode */
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
 
+	/*Load perspective */
+	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
+
+	/* Enable Zbuf */
+	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+
 	/* Enable Light */
-	GXU_setLight(viewMtx, lightColor);
+	GXU_setLight(viewMtx, lightColor, (guVector) {0, -1, sin(framenr / 10.f)});
 
 	/* Draw Symbol */
 	OBJECT_render(objectSymbol, viewMtx);
 
-	SPRITE_render(spriteBackground);
-
+	/* Disable Zbuf */
+	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
 	GXRModeObj* rmode = GXU_getMode();
 	FONT_draw(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth / 2, rmode->viHeight - 200, TRUE);
 }

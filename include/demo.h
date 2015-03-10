@@ -5,6 +5,7 @@
 #define _DEMO_H
 
 #include <ogc/gu.h>
+#include "scene.h"
 
 /*! \brief Initialize demo data
  */
@@ -16,6 +17,6 @@ void DEMO_update();
 
 /*! \brief Render demo
 */
-void DEMO_render(Mtx viewMtx);
+void DEMO_render(camera_t* mainCamera, Mtx viewMtx);
 
 #endif

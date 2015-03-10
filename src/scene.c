@@ -27,7 +27,6 @@ void SCENE_load() {
 	guLookAt(mainView, &cameraPos, &cameraUp, &targetPos);
 
 	FONT_init();
-	SPRITE_init();
 
 	DEMO_init();
 }
@@ -36,14 +35,11 @@ void SCENE_render() {
 	/* Render time */
 	GX_SetNumChans(1);
 
-	//Load perspective
-	GX_LoadProjectionMtx(mainCamera.perspectiveMtx, GX_PERSPECTIVE);
-
 	//Update demo login
 	DEMO_update();
 
 	//Render scene
-	DEMO_render(mainView);
+	DEMO_render(&mainCamera, mainView);
 
 	/* Flip framebuffer */
 	GXU_done();

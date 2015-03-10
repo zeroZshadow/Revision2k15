@@ -6,7 +6,7 @@
 
 f32 fontRatio;
 
-void generateUV(font_t* font,
+void _FONT_GenerateUV(font_t* font,
 	const char* chars,
 	const u16 charWidth,
 	const u16 charHeight,
@@ -50,12 +50,7 @@ void generateUV(font_t* font,
 	}
 }
 
-void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
-	u16 messagelength = strlen(message);
-	const char* msgpointer = message;
-	f32 height = font->height;
-	f32 width = font->width;
-
+void _FONT_Prep(font_t* font) {
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
@@ -82,6 +77,32 @@ void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
 
 	/* Orthographic mode */
 	GXU_2DMode();
+}
+
+void _FONT_Rect(font_t* font, u32 index, f32 x, f32 y) {
+	const f32 height = font->height;
+	const f32 width = font->width;
+
+	GX_Position2f32(x, y);
+	GX_TexCoord2f32(font->charUV[index].uvs[0], font->charUV[index].uvs[1]);
+	/* Bottom left */
+	GX_Position2f32(x, y + height);
+	GX_TexCoord2f32(font->charUV[index].uvs[2], font->charUV[index].uvs[3]);
+	/* Bottom right */
+	GX_Position2f32(x + width, y + height);
+	GX_TexCoord2f32(font->charUV[index].uvs[4], font->charUV[index].uvs[5]);
+	/* Top right */
+	GX_Position2f32(x + width, y);
+	GX_TexCoord2f32(font->charUV[index].uvs[6], font->charUV[index].uvs[7]);
+}
+
+void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
+	const u16 messagelength = strlen(message);
+	const char* msgpointer = message;
+	const f32 height = font->height;
+	const f32 width = font->width;
+
+	_FONT_Prep(font);
 
 	u16 charCount = 0, offset = 0;
 	f32 xoffset = 0, yoffset = 0, centreoffset = 0;
@@ -98,23 +119,11 @@ void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
 			u16 i;
 			for (i = 0; i < charCount; i++) {
 				u8 index = font->charIndex[(u8) msgpointer[i]];
-
 				f32 xx = centreoffset + xoffset + x;
 				f32 yy = yoffset + y;
 
-				/* CCW */
-				/* Top left */
-				GX_Position2f32(xx, yy);
-				GX_TexCoord2f32(font->charUV[index].uvs[0], font->charUV[index].uvs[1]);
-				/* Bottom left */
-				GX_Position2f32(xx, yy + height);
-				GX_TexCoord2f32(font->charUV[index].uvs[2], font->charUV[index].uvs[3]);
-				/* Bottom right */
-				GX_Position2f32(xx + width, yy + height);
-				GX_TexCoord2f32(font->charUV[index].uvs[4], font->charUV[index].uvs[5]);
-				/* Top right */
-				GX_Position2f32(xx + width, yy);
-				GX_TexCoord2f32(font->charUV[index].uvs[6], font->charUV[index].uvs[7]);
+				//Build vertices
+				_FONT_Rect(font, index, xx, yy);
 
 				xoffset += width;
 			}
@@ -133,6 +142,10 @@ void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
 	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
 }
 
+//void FONT_drawScroller(font_t* font, const char* message, f32 x, f32 y, f32 spacing, f32 freq, f32 amp, f32 offset) {
+
+//}
+
 void FONT_init() {
 	fontRatio = 1 / GXU_getAspectRatio();
 }
@@ -150,7 +163,7 @@ font_t* FONT_load(GXTexObj* texture,
 	GX_InitTexObjWrapMode(texture, GX_CLAMP, GX_CLAMP);
 	GX_InitTexObjFilterMode(texture, GX_NEAR, GX_NEAR);
 
-	generateUV(font, chars, charWidth, charHeight, texSize);
+	_FONT_GenerateUV(font, chars, charWidth, charHeight, texSize);
 	return font;
 }
 

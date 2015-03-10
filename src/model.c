@@ -34,7 +34,6 @@ model_t* MODEL_setup(const u8* model_bmb) {
 	DCInvalidateRange(modelList, dispSize);
 	GX_BeginDispList(modelList, dispSize);
 
-	//GX_InvVtxCache();
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_POS, GX_INDEX16);
 	GX_SetVtxDesc(GX_VA_NRM, GX_INDEX16);

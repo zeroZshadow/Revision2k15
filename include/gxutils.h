@@ -26,7 +26,7 @@ void GXU_loadTexture(s32 texId, GXTexObj* texObj);
  *  \param view View matrix
  *  \param lightColor Colors of Diffuse, Ambient and Material lights
  */
-void GXU_setLight(Mtx view, GXColor lightColor[]);
+void GXU_setLight(Mtx view, GXColor lightColor[], guVector lpos);
 
 /*! \brief Get video mode
  *  \return Currently preferred/used video mode
