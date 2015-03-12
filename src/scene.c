@@ -19,10 +19,10 @@ BOOL firstFrame = TRUE;
 
 void SCENE_load() {
 	/* Setup spectator matrix */
-	GXU_setupCamera(&mainCamera, 1, 1);
+	GXU_setupCamera(&mainCamera);
 	GX_SetViewport(mainCamera.offsetLeft, mainCamera.offsetTop, mainCamera.width, mainCamera.height, 0, 1);
-	guVector cameraPos = { 0, 0, -10 };
-	guVector targetPos = { 0, 0, 0 };
+	guVector cameraPos = { 0, 0, 0 };
+	guVector targetPos = { 0, 0, -1 };
 	guVector cameraUp = { 0, 1, 0 };
 	guLookAt(mainView, &cameraPos, &cameraUp, &targetPos);
 

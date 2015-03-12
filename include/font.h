@@ -17,6 +17,7 @@ typedef struct {
 	u8        charIndex[128];
 	charuv_t* charUV;
 	u16 width, height;
+	GXColor color;
 } font_t;
 
 /*! \brief Initialize font subsystem (requires GXU) 

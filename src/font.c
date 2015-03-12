@@ -62,6 +62,11 @@ void _FONT_Prep(font_t* font) {
 	Mtx modelView;
 	guMtxIdentity(modelView);
 	GX_LoadPosMtxImm(modelView, GX_PNMTX0);
+	GX_LoadNrmMtxImm(modelView, GX_PNMTX0); //dummies required
+
+	/* Set color */
+	GX_SetChanAmbColor(GX_COLOR0A0, font->color);
+	GX_SetChanMatColor(GX_COLOR0A0, font->color);
 
 	/* Set font texture */
 	GX_LoadTexObj(font->texture, GX_TEXMAP0);
@@ -71,9 +76,6 @@ void _FONT_Prep(font_t* font) {
 	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
 	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
-
-	/* Disable Z Reading/Writing */
-	GX_SetZMode(GX_FALSE, GX_LEQUAL, GX_FALSE);
 
 	/* Orthographic mode */
 	GXU_2DMode();
@@ -137,9 +139,6 @@ void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
 		msgpointer += charCount + 1;
 		offset += charCount + 1;
 	} while (offset < messagelength);
-
-	/* Re-enable Z Reading/Writing */
-	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
 }
 
 //void FONT_drawScroller(font_t* font, const char* message, f32 x, f32 y, f32 spacing, f32 freq, f32 amp, f32 offset) {
@@ -158,6 +157,7 @@ font_t* FONT_load(GXTexObj* texture,
 	font_t* font = malloc(sizeof(font_t));
 	font->width = charWidth;
 	font->height = charHeight;
+	font->color = (GXColor) { 0xFF, 0xFF, 0xFF, 0xFF };
 
 	font->texture = texture;
 	GX_InitTexObjWrapMode(texture, GX_CLAMP, GX_CLAMP);
@@ -165,6 +165,10 @@ font_t* FONT_load(GXTexObj* texture,
 
 	_FONT_GenerateUV(font, chars, charWidth, charHeight, texSize);
 	return font;
+}
+
+void FONT_color(font_t* font, GXColor color) {
+	font->color = color;
 }
 
 void FONT_free(font_t* font) {

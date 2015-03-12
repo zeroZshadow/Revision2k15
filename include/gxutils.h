@@ -47,7 +47,7 @@ void GXU_done();
  *  \param[in]     splitType   Type of split (total number of players)
  *  \param[in]     splitPlayer Player position in split
  */
-void GXU_setupCamera(camera_t* camera, u8 splitType, u8 splitPlayer);
+void GXU_setupCamera(camera_t* camera);
 
 /*! \brief Load 2D ortho matrix for sprite/font rendering 
  */

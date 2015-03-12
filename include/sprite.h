@@ -13,12 +13,13 @@ typedef struct {
 	GXTexObj*   texture;
 	transform_t transform;
 	f32 width, height;
+	GXColor color;
 } sprite_t;
 
 /*! \brief Create empty sprite
  *  \return Pointer to newly sprite structure
  */
-sprite_t* SPRITE_create(f32 x, f32 y, f32 width, f32 height);
+sprite_t* SPRITE_create(f32 x, f32 y, f32 depth, f32 width, f32 height);
 
 /*! \brief Frees a sprite
  *  \param sprite Sprite to destroy
@@ -48,7 +49,8 @@ void SPRITE_flush(sprite_t* sprite);
 *  \param object Object to move
 *  \param tX     X coordinate
 *  \param tY     Y coordinate
+*  \param tDepth Depth
 */
-void SPRITE_moveTo(object_t* object, const f32 tX, const f32 tY);
+void SPRITE_moveTo(sprite_t* sprite, const f32 tX, const f32 tY, const f32 tDepth);
 
 #endif

@@ -2,15 +2,16 @@
 #include "mathutil.h"
 #include <malloc.h>
 
-sprite_t* SPRITE_create(f32 x, f32 y, f32 width, f32 height) {
+sprite_t* SPRITE_create(f32 x, f32 y, f32 depth, f32 width, f32 height) {
 	sprite_t* sprite = malloc(sizeof(sprite_t));
 	sprite->width = width;
 	sprite->height = height;
 	sprite->texture = NULL;
+	sprite->color = (GXColor) { 0xFF, 0xFF, 0xFF, 0xFF };
 
 	guMtxIdentity(sprite->transform.matrix);
 
-	sprite->transform.position = (guVector) { x, y, 0 };
+	sprite->transform.position = (guVector) { x, y, depth };
 	sprite->transform.scale = (guVector) { 1, 1, 1 };
 	guQuaternion rotation;
 	EulerToQuaternion(&rotation, 0, 0, 0);
@@ -18,6 +19,10 @@ sprite_t* SPRITE_create(f32 x, f32 y, f32 width, f32 height) {
 	sprite->transform.dirty = TRUE;
 
 	return sprite;
+}
+
+void SPRITE_color(sprite_t* sprite, GXColor color) {
+	sprite->color = color;
 }
 
 void SPRITE_setTexture(sprite_t* sprite, GXTexObj* texture) {
@@ -37,10 +42,17 @@ void SPRITE_render(sprite_t* sprite) {
 	SPRITE_flush(sprite);
 
 	/* Set position */
+	Mtx dummy;
+	guMtxIdentity(dummy);
 	GX_LoadPosMtxImm(sprite->transform.matrix, GX_PNMTX0);
+	GX_LoadNrmMtxImm(dummy, GX_PNMTX0); //No dummies required
 
 	/* Set sprite texture */
 	GX_LoadTexObj(sprite->texture, GX_TEXMAP0);
+
+	/* Set color */
+	GX_SetChanAmbColor(GX_COLOR0A0, sprite->color);
+	GX_SetChanMatColor(GX_COLOR0A0, sprite->color);
 
 	/* Vtx descriptors reset and set */
 	GX_ClearVtxDesc();
@@ -51,9 +63,6 @@ void SPRITE_render(sprite_t* sprite) {
 
 	/* Lighting off, Alpha blend */
 	GX_SetNumChans(1);
-	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
-	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
-	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
 
 	/* Orthographic mode */
 	GXU_2DMode();
@@ -76,3 +85,10 @@ void SPRITE_render(sprite_t* sprite) {
 	GX_End();
 }
 
+void SPRITE_moveTo(sprite_t* sprite, const f32 tX, const f32 tY, const f32 tDepth) {
+	transform_t* t = &sprite->transform;
+	t->position.x = tX;
+	t->position.y = tY;
+	t->position.z = tDepth;
+	t->dirty = TRUE;
+}

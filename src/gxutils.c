@@ -21,6 +21,8 @@ static GXRModeObj *rmode = NULL;
 BOOL first_frame = FALSE;
 void *gpfifo = NULL;
 f32 aspectRatio;
+static f32 nearClip = 0;
+static f32 farClip = 500;
 Mtx44 orthographicMatrix;
 
 /* Texture file */
@@ -71,7 +73,7 @@ void GXU_init() {
 
 	/* Clear the background to black and clear the Z buf */
 	GXColor background = { 0xa0, 0xe0, 0xf0, 0xff };
-	GX_SetCopyClear(background, 0x00ffffff);
+	GX_SetCopyClear(background, GX_MAX_Z24);
 
 	f32 yscale = GX_GetYScaleFactor(rmode->efbHeight, rmode->xfbHeight);
 	u32 xfbHeight = GX_SetDispCopyYScale(yscale);
@@ -98,7 +100,7 @@ void GXU_init() {
 
 	first_frame = TRUE;
 
-	GXU_SetViewport(0, 0, rmode->viWidth, rmode->viHeight, 0, 1);
+	GXU_SetViewport(0, 0, rmode->viWidth, rmode->viHeight, nearClip, farClip);
 }
 
 void GXU_loadTexture(s32 texId, GXTexObj* texObj) {
@@ -128,20 +130,17 @@ void GXU_done() {
 void GXU_setLight(Mtx view, GXColor lightColor[], guVector lpos) {
 	GXLightObj lobj;
 
-	guVecNormalize(&lpos);
-	guVecMultiplySR(view, &lpos, &lpos);
+	guVecMultiply(view, &lpos, &lpos);
 
-	GX_InitLightDirv(&lobj, &lpos);
+	GX_InitLightPos(&lobj, lpos.x, lpos.y, lpos.z);
 	GX_InitLightColor(&lobj, lightColor[0]);
-	GX_InitLightShininess(&lobj, 12.0f);
 	GX_LoadLightObj(&lobj, GX_LIGHT0);
 
 	/* Set number of rasterized color channels */
 	GX_SetNumChans(1);
-	GX_SetChanCtrl(GX_COLOR0A0, GX_ENABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, 1, 0);
+	GX_SetChanCtrl(GX_COLOR0A0, GX_ENABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
 	GX_SetChanAmbColor(GX_COLOR0A0, lightColor[1]);
 	GX_SetChanMatColor(GX_COLOR0A0, lightColor[2]);
-	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
 }
 
 GXRModeObj* GXU_getMode() {
@@ -152,13 +151,13 @@ f32 GXU_getAspectRatio() {
 	return aspectRatio;
 }
 
-void GXU_setupCamera(camera_t* camera, u8 splitCount, u8 splitPlayer) {
-	camera->width = splitCount > 2 ? rmode->viWidth >> 1 : rmode->viWidth;
-	camera->height = splitCount > 1 ? rmode->efbHeight >> 1 : rmode->efbHeight;
-	camera->offsetLeft = splitCount > 2 && splitPlayer % 2 == 0 ? rmode->viWidth >> 1 : 0;
-	camera->offsetTop = splitPlayer > (splitCount > 2 ? 2 : 1) ? rmode->efbHeight >> 1 : 0;
+void GXU_setupCamera(camera_t* camera) {
+	camera->width = rmode->viWidth;
+	camera->height = rmode->efbHeight;
+	camera->offsetLeft = 0;
+	camera->offsetTop = 0;
 
-	guPerspective(camera->perspectiveMtx, 60, aspectRatio * (splitCount == 2 ? 2.f : 1.f), 0.1f, 300.0f);
+	guPerspective(camera->perspectiveMtx, 60, aspectRatio, nearClip, farClip);
 }
 
 void GXU_2DMode() {
@@ -169,5 +168,5 @@ void GXU_SetViewport(f32 xOrig, f32 yOrig, f32 wd, f32 ht, f32 nearZ, f32 farZ) 
 	GX_SetScissor(xOrig, yOrig, wd, ht);
 	GX_SetViewport(xOrig, yOrig, wd, ht, nearZ, farZ);
 
-	guOrtho(orthographicMatrix, 0, ht, 0,wd, 0, rmode->viWidth);
+	guOrtho(orthographicMatrix, 0, ht, 0, wd, nearZ, farZ);
 }
