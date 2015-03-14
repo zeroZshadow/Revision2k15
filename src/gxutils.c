@@ -21,7 +21,7 @@ static GXRModeObj *rmode = NULL;
 BOOL first_frame = FALSE;
 void *gpfifo = NULL;
 f32 aspectRatio;
-static f32 nearClip = 0.0f;
+static f32 nearClip = 1.0f;
 static f32 farClip = 100.0f;
 Mtx44 orthographicMatrix;
 
@@ -44,7 +44,7 @@ void GXU_init() {
 
 	VIDEO_Configure(rmode);
 	VIDEO_SetNextFramebuffer(xfb[fbi]);
-	VIDEO_SetBlack(FALSE);
+	VIDEO_SetBlack(TRUE);
 	VIDEO_Flush();
 	VIDEO_WaitVSync();
 	if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
@@ -72,7 +72,7 @@ void GXU_init() {
 	GX_Init(gpfifo, DEFAULT_FIFO_SIZE);
 
 	/* Clear the background to black and clear the Z buf */
-	GXColor background = { 0x00, 0x00, 0x00, 0xff };
+	GXColor background = { 0x50, 0x50, 0x50, 0xff };
 	GX_SetCopyClear(background, GX_MAX_Z24);
 
 	f32 yscale = GX_GetYScaleFactor(rmode->efbHeight, rmode->xfbHeight);
@@ -169,11 +169,12 @@ f32 GXU_getAspectRatio() {
 }
 
 void GXU_setupCamera(camera_t* camera) {
-	camera->width = rmode->viWidth;
+	camera->width = rmode->fbWidth;
 	camera->height = rmode->efbHeight;
 	camera->offsetLeft = 0;
 	camera->offsetTop = 0;
 
+	guMtxIdentity(camera->perspectiveMtx);
 	guPerspective(camera->perspectiveMtx, 60, aspectRatio, nearClip, farClip);
 }
 

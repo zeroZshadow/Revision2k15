@@ -36,7 +36,7 @@ void DEMO_init() {
 	//Textures
 	GXU_loadTexture(whiteTex, &whiteTexObj);
 	GXU_loadTexture(foreTex, &foreTexObj);
-	GXU_loadTexture(backTex, &backTexObj);
+	GXU_loadTexture(backtestTex, &backTexObj);
 	GXU_loadTexture(fontTex, &fontTexObj);
 	GX_InvalidateTexAll();
 
@@ -90,7 +90,7 @@ void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
 	/* Draw objects */
 	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
 	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
-	GX_SetZMode(GX_TRUE, GX_GEQUAL, GX_TRUE);
+	GX_SetZMode(GX_TRUE, GX_ALWAYS, GX_TRUE);
 	for (i = 0; i < 3; ++i) {
 		OBJECT_render(objectSymbol[i], viewMtx);
 	}

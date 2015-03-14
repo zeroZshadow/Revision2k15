@@ -61,8 +61,9 @@ void _FONT_Prep(font_t* font) {
 	/* Set position to identity */
 	Mtx modelView;
 	guMtxIdentity(modelView);
-	GX_LoadPosMtxImm(modelView, GX_PNMTX0);
 	GX_LoadNrmMtxImm(modelView, GX_PNMTX0); //dummies required
+	guMtxTransApply(modelView, modelView, 0, 0, -1); //0 isnt allowed, -1 is minimum TODO: sync with near plane value
+	GX_LoadPosMtxImm(modelView, GX_PNMTX0);
 
 	/* Set color */
 	GX_SetChanAmbColor(GX_COLOR0A0, font->color);
