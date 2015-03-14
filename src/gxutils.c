@@ -21,8 +21,8 @@ static GXRModeObj *rmode = NULL;
 BOOL first_frame = FALSE;
 void *gpfifo = NULL;
 f32 aspectRatio;
-static f32 nearClip = 0;
-static f32 farClip = 500;
+static f32 nearClip = 0.0f;
+static f32 farClip = 100.0f;
 Mtx44 orthographicMatrix;
 
 /* Texture file */
@@ -72,7 +72,7 @@ void GXU_init() {
 	GX_Init(gpfifo, DEFAULT_FIFO_SIZE);
 
 	/* Clear the background to black and clear the Z buf */
-	GXColor background = { 0xa0, 0xe0, 0xf0, 0xff };
+	GXColor background = { 0x00, 0x00, 0x00, 0xff };
 	GX_SetCopyClear(background, GX_MAX_Z24);
 
 	f32 yscale = GX_GetYScaleFactor(rmode->efbHeight, rmode->xfbHeight);
@@ -84,7 +84,7 @@ void GXU_init() {
 
 	GX_SetPixelFmt(rmode->aa ? GX_PF_RGB565_Z16 : GX_PF_RGB8_Z24, GX_ZC_LINEAR);
 
-	GX_SetCullMode(GX_CULL_FRONT);
+	GX_SetCullMode(GX_CULL_FRONT); //TODO: back to GX_CULL_FRONT
 	GX_CopyDisp(xfb[fbi], GX_TRUE);
 	GX_SetDispCopyGamma(GX_GM_1_0);
 
@@ -100,7 +100,7 @@ void GXU_init() {
 
 	first_frame = TRUE;
 
-	GXU_SetViewport(0, 0, rmode->viWidth, rmode->viHeight, nearClip, farClip);
+	GXU_SetViewport(0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
 }
 
 void GXU_loadTexture(s32 texId, GXTexObj* texObj) {
@@ -143,6 +143,23 @@ void GXU_setLight(Mtx view, GXColor lightColor[], guVector lpos) {
 	GX_SetChanMatColor(GX_COLOR0A0, lightColor[2]);
 }
 
+void GXU_setDirLight(Mtx view, GXColor lightColor[], guVector ldir) {
+	GXLightObj lobj;
+
+	guVecMultiplySR(view, &ldir, &ldir);
+
+	GX_InitSpecularDirv(&lobj, &ldir);
+	GX_InitLightColor(&lobj, lightColor[0]);
+	GX_InitLightShininess(&lobj, 12.0f);
+	GX_LoadLightObj(&lobj, GX_LIGHT0);
+
+	/* Set number of rasterized color channels */
+	GX_SetNumChans(1);
+	GX_SetChanCtrl(GX_COLOR0A0, GX_ENABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
+	GX_SetChanAmbColor(GX_COLOR0A0, lightColor[1]);
+	GX_SetChanMatColor(GX_COLOR0A0, lightColor[2]);
+}
+
 GXRModeObj* GXU_getMode() {
 	return rmode;
 }
@@ -168,5 +185,5 @@ void GXU_SetViewport(f32 xOrig, f32 yOrig, f32 wd, f32 ht, f32 nearZ, f32 farZ) 
 	GX_SetScissor(xOrig, yOrig, wd, ht);
 	GX_SetViewport(xOrig, yOrig, wd, ht, nearZ, farZ);
 
-	guOrtho(orthographicMatrix, 0, ht, 0, wd, nearZ, farZ);
+	guOrtho(orthographicMatrix, 0, ht, 0, wd, nearClip, farClip);
 }

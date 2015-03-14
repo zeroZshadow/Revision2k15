@@ -10,11 +10,17 @@
 #include "mathutil.h"
 
 BOOL isRunning;
-void OnResetCalled();
+s32 reset_func(s32 final);
+
+static sys_resetinfo resetinfo = {
+	{ NULL, NULL },
+	reset_func,
+	1
+};
 
 int main() {
 	/* Setup reset function */
-	SYS_SetResetCallback(OnResetCalled);
+	SYS_RegisterResetFunc(&resetinfo);
 
 	AU_init();
 	GXU_init();
@@ -28,6 +34,7 @@ int main() {
 	return 0;
 }
 
-void OnResetCalled() {
+s32 reset_func(s32 final) {
 	isRunning = FALSE;
+	return 1;
 }

@@ -13,14 +13,14 @@
 #include "sprite.h"
 
 //Data
-#include "symbol_bmb.h"
-#include "music_mod.h"
+#include "mine_bmb.h"
+#include "music_ogg.h"
 
 /* Data vars */
 model_t *modelSymbol;
-object_t *objectSymbol;
+object_t *objectSymbol[3];
 sprite_t* spriteBackground, *spriteForeground;
-GXTexObj whiteTexObj, blackTexObj, darkTexObj, lightTexObj, fontTexObj;
+GXTexObj whiteTexObj, backTexObj, foreTexObj, fontTexObj;
 font_t* font;
 
 int framenr = 0;
@@ -35,62 +35,71 @@ static GXColor lightColor[] = {
 void DEMO_init() {
 	//Textures
 	GXU_loadTexture(whiteTex, &whiteTexObj);
-	GXU_loadTexture(blackTex, &blackTexObj);
-	GXU_loadTexture(lightTex, &lightTexObj);
-	GXU_loadTexture(darkTex, &darkTexObj);
-	GXU_loadTexture(ubuntuFontTex, &fontTexObj);
+	GXU_loadTexture(foreTex, &foreTexObj);
+	GXU_loadTexture(backTex, &backTexObj);
+	GXU_loadTexture(fontTex, &fontTexObj);
+	GX_InvalidateTexAll();
 
 	//Meshes
-	modelSymbol = MODEL_setup(symbol_bmb);
-	MODEL_setTexture(modelSymbol, &blackTexObj);
+	modelSymbol = MODEL_setup(mine_bmb);
+	MODEL_setTexture(modelSymbol, &whiteTexObj);
 
 	//Sprites
-	spriteBackground = SPRITE_create(0, 0, -200, 640, 528);
-	spriteForeground = SPRITE_create(0, 0, 0.9f, 640, 528);
-	SPRITE_setTexture(spriteBackground, &lightTexObj);
-	SPRITE_setTexture(spriteForeground, &darkTexObj);
+	spriteBackground = SPRITE_create(0, 0, -20, 640, 528);
+	spriteForeground = SPRITE_create(0, 0, -10, 640, 528);
+	SPRITE_setTexture(spriteBackground, &backTexObj);
+	SPRITE_setTexture(spriteForeground, &foreTexObj);
 
 	//Objects
-	objectSymbol = OBJECT_create(modelSymbol);
+	u32 i;
+	for (i = 0; i < 3; ++i) {
+		objectSymbol[i] = OBJECT_create(modelSymbol);
 
-	//Symbol
-	OBJECT_scaleTo(objectSymbol, .4f, .4f, .4f);
-	OBJECT_moveTo(objectSymbol, 0, 0, -150);
+		//Symbol
+		OBJECT_scaleTo(objectSymbol[i], .2f, .2f, .2f);
+	}
 
 	//Fonts
 	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256);
 
 	//Start music
-	//AU_playMusic(music_mod);
+	//AU_playMusic(music_ogg, music_ogg_size);
 }
 
 void DEMO_update() {
-	OBJECT_rotate(objectSymbol, 0, .03f, 0);
+	u32 i;
+	for (i = 0; i < 3; ++i) {
+		f32 prog = (framenr * 0.02f) + (i * 5);
+		OBJECT_rotate(objectSymbol[i], sin(prog) * 0.04f, cos(prog) * 0.06f, 0);
+		f32 xoffset = (sin(prog * 1.3f) * 0.8f + (i * 0.3f) - 0.3f) * 20.0f;
+		f32 yoffset = (cos(prog) * 0.5f + (i * 0.2f) - 0.2f) * 20.0f;
+		f32 zoffset = cos(prog * 3) * 20.0f;
+		OBJECT_moveTo(objectSymbol[i], xoffset, yoffset, -50 + zoffset);
+	}
 	framenr++;
 }
 
 void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
+	u32 i;
 
-	/* Draw Symbol */
-	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
-	GXU_setLight(viewMtx, lightColor, (guVector) {0,0,-1});
-	GX_SetTevOp(GX_TEVSTAGE0, GX_BLEND);
-	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_SET);
+	/* Render bitmaps */
+	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
 	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
-	OBJECT_render(objectSymbol, viewMtx);
+	SPRITE_render(spriteForeground);
 
-	/* Render background */
-	//GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
-	//GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
-	//GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+	/* Draw objects */
+	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
 	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
+	GX_SetZMode(GX_TRUE, GX_GEQUAL, GX_TRUE);
+	for (i = 0; i < 3; ++i) {
+		OBJECT_render(objectSymbol[i], viewMtx);
+	}
+
+	GX_SetZMode(GX_TRUE, GX_LESS, GX_FALSE);
 	SPRITE_render(spriteBackground);
 
-	//SPRITE_render(spriteForeground);
-
-	/* Disable Zbuf */
-	GX_SetZMode(GX_FALSE, GX_LEQUAL, GX_FALSE);
-	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
+	/* Disable font */
+	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
 	GXRModeObj* rmode = GXU_getMode();
-	FONT_draw(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth / 2, rmode->viHeight - 100, TRUE);
+	FONT_draw(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth / 2, rmode->viHeight - 100 + (sin(framenr * 0.1f) * 10), TRUE);
 }

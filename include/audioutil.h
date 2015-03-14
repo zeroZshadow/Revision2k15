@@ -11,15 +11,11 @@
 void AU_init();
 
 /*! \brief Play a specific music
- *  \param music Music Id, from generated assets
+ *  \param music buffer pointer, from generated assets
+ *  \param size buffer size, from generated assets
  */
-void AU_playMusic(const void* music);
+void AU_playMusic(const void* music, const s32 size);
 
-/*! \brief Get position on channel
-*  \param index Channel index
-*/
-u32 AU_getChannelPos(u32 index);
-
-u32 AU_getSongPos();
+void AU_stopMusic();
 
 #endif

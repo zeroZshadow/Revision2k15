@@ -22,11 +22,19 @@ void GXU_init();
  */
 void GXU_loadTexture(s32 texId, GXTexObj* texObj);
 
-/*! \brief Set light color
+/*! \brief Set light
  *  \param view View matrix
  *  \param lightColor Colors of Diffuse, Ambient and Material lights
+ *  \param lpos Light position in the world
  */
 void GXU_setLight(Mtx view, GXColor lightColor[], guVector lpos);
+
+/*! \brief Set light
+*  \param view View matrix
+*  \param lightColor Colors of Diffuse, Ambient and Material lights
+*  \param ldir Light direction in the world
+*/
+void GXU_setDirLight(Mtx view, GXColor lightColor[], guVector ldir);
 
 /*! \brief Get video mode
  *  \return Currently preferred/used video mode
