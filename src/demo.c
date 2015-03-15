@@ -60,10 +60,10 @@ void DEMO_init() {
 	}
 
 	//Fonts
-	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256);
+	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256, 3.0f);
 
 	//Start music
-	//AU_playMusic(music_ogg, music_ogg_size);
+	AU_playMusic(music_ogg, music_ogg_size);
 }
 
 void DEMO_update() {
@@ -101,5 +101,5 @@ void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
 	/* Disable font */
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
 	GXRModeObj* rmode = GXU_getMode();
-	FONT_draw(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth / 2, rmode->viHeight - 100 + (sin(framenr * 0.1f) * 10), TRUE);
+	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (framenr * 2.0f), rmode->viHeight - 120, 0, 0.5f, 8, framenr * 0.1f);
 }

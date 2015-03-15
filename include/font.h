@@ -17,6 +17,7 @@ typedef struct {
 	u8        charIndex[128];
 	charuv_t* charUV;
 	u16 width, height;
+	f32 scale;
 	GXColor color;
 } font_t;
 
@@ -32,7 +33,7 @@ void FONT_init();
  *  \param columns    Number of characters per row
  *  \param texSize    Texture size
  */
-font_t* FONT_load(GXTexObj* texture, const char* chars, const u16 charWidth, const u16 charHeight, const u16 texSize);
+font_t* FONT_load(GXTexObj* texture, const char* chars, const u16 charWidth, const u16 charHeight, const u16 texSize, const f32 scale);
 
 /*! \brief Draws a message using the provided font 
  *  \param font    Font to use
@@ -42,6 +43,8 @@ font_t* FONT_load(GXTexObj* texture, const char* chars, const u16 charWidth, con
  *  \param size    Font size
  */
 void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre);
+
+void FONT_drawScroller(font_t* font, const char* message, f32 x, f32 y, f32 padding, f32 freq, f32 amplitude, f32 offset);
 
 /*! \brief Frees font data 
  *  \param font Font structure to destroy

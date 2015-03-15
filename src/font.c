@@ -3,6 +3,7 @@
 #include "mathutil.h"
 #include <string.h>
 #include <malloc.h>
+#include <math.h>
 
 f32 fontRatio;
 
@@ -83,8 +84,8 @@ void _FONT_Prep(font_t* font) {
 }
 
 void _FONT_Rect(font_t* font, u32 index, f32 x, f32 y) {
-	const f32 height = font->height;
-	const f32 width = font->width;
+	const f32 height = font->height * font->scale;
+	const f32 width = font->width * font->scale;
 
 	GX_Position2f32(x, y);
 	GX_TexCoord2f32(font->charUV[index].uvs[0], font->charUV[index].uvs[1]);
@@ -99,7 +100,7 @@ void _FONT_Rect(font_t* font, u32 index, f32 x, f32 y) {
 	GX_TexCoord2f32(font->charUV[index].uvs[6], font->charUV[index].uvs[7]);
 }
 
-void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
+void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL center) {
 	const u16 messagelength = strlen(message);
 	const char* msgpointer = message;
 	const f32 height = font->height;
@@ -112,7 +113,7 @@ void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
 	do {
 		charCount = strcspn(msgpointer, "\n"); //length till newline (exclusive)
 
-		if (centre) {
+		if (center) {
 			centreoffset = -(charCount / 2) * width;
 		}
 
@@ -142,9 +143,39 @@ void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL centre) {
 	} while (offset < messagelength);
 }
 
-//void FONT_drawScroller(font_t* font, const char* message, f32 x, f32 y, f32 spacing, f32 freq, f32 amp, f32 offset) {
+void FONT_drawScroller(font_t* font, const char* message, f32 x, f32 y, f32 padding , f32 freq, f32 amplitude, f32 progress) {
+	const u16 messagelength = strlen(message);
+	const char* msgpointer = message;
+	const f32 width = font->width * font->scale;
 
-//}
+	_FONT_Prep(font);
+
+	u16 charCount = 0, offset = 0;
+	f32 xoffset = 0;
+	do {
+		charCount = strcspn(msgpointer, "\n"); //length till newline (exclusive)
+
+		//Skip recurring
+		if (charCount > 0) {
+			GX_Begin(GX_QUADS, GX_VTXFMT0, 4 * charCount);
+			u16 i;
+			for (i = 0; i < charCount; i++) {
+				u8 index = font->charIndex[(u8)msgpointer[i]];
+				f32 xx = xoffset + x + (i * padding);
+				f32 yy = y + cos(progress + i * freq) * amplitude;
+
+				//Build vertices
+				_FONT_Rect(font, index, xx, yy);
+
+				xoffset += width;
+			}
+			GX_End();
+		}
+
+		msgpointer += charCount + 1;
+		offset += charCount + 1;
+	} while (offset < messagelength);
+}
 
 void FONT_init() {
 	fontRatio = 1 / GXU_getAspectRatio();
@@ -154,10 +185,12 @@ font_t* FONT_load(GXTexObj* texture,
 	const char* chars,
 	const u16 charWidth,
 	const u16 charHeight,
-	const u16 texSize) {
+	const u16 texSize,
+	const f32 scale) {
 	font_t* font = malloc(sizeof(font_t));
 	font->width = charWidth;
 	font->height = charHeight;
+	font->scale = scale;
 	font->color = (GXColor) { 0xFF, 0xFF, 0xFF, 0xFF };
 
 	font->texture = texture;
