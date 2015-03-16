@@ -14,13 +14,14 @@
 
 //Data
 #include "mine_bmb.h"
+#include "gothicube_bmb.h"
 #include "music_ogg.h"
 
 /* Data vars */
-model_t *modelSymbol;
-object_t *objectSymbol[3];
-sprite_t* spriteBackground, *spriteForeground;
-GXTexObj whiteTexObj, backTexObj, foreTexObj, fontTexObj;
+model_t *modelMine, *modelCube;
+object_t *objectMine[3], *objectCube;
+sprite_t* spriteBackground, *spriteForeground, *spriteMagician;
+GXTexObj whiteTexObj, backTexObj, foreTexObj, fontTexObj, magicianTexObj;
 font_t* font;
 
 int framenr = 0;
@@ -38,48 +39,51 @@ void DEMO_init() {
 	GXU_loadTexture(foreTex, &foreTexObj);
 	GXU_loadTexture(backtestTex, &backTexObj);
 	GXU_loadTexture(fontTex, &fontTexObj);
+	GXU_loadTexture(magicianTex, &magicianTexObj);
 	GX_InvalidateTexAll();
 
 	//Meshes
-	modelSymbol = MODEL_setup(mine_bmb);
-	MODEL_setTexture(modelSymbol, &whiteTexObj);
+	modelMine = MODEL_setup(mine_bmb);
+	MODEL_setTexture(modelMine, &whiteTexObj);
+	modelCube = MODEL_setup(gothicube_bmb);
+	MODEL_setTexture(modelCube, &whiteTexObj);
 
 	//Sprites
 	spriteBackground = SPRITE_create(0, 0, -20, 640, 528);
 	spriteForeground = SPRITE_create(0, 0, -10, 640, 528);
+	spriteMagician = SPRITE_create(0, 0, -10, 640, 528);
 	SPRITE_setTexture(spriteBackground, &backTexObj);
 	SPRITE_setTexture(spriteForeground, &foreTexObj);
+	SPRITE_setTexture(spriteMagician, &magicianTexObj);
 
 	//Objects
 	u32 i;
+	//Mines
 	for (i = 0; i < 3; ++i) {
-		objectSymbol[i] = OBJECT_create(modelSymbol);
-
-		//Symbol
-		OBJECT_scaleTo(objectSymbol[i], .2f, .2f, .2f);
+		objectMine[i] = OBJECT_create(modelMine);
+		OBJECT_scaleTo(objectMine[i], .2f, .2f, .2f);
 	}
+	//Cube
+	objectCube = OBJECT_create(modelCube);
+	OBJECT_moveTo(objectCube, 0, -5, -50);
 
 	//Fonts
 	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256, 3.0f);
 
 	//Start music
-	AU_playMusic(music_ogg, music_ogg_size);
+	//AU_playMusic(music_ogg, music_ogg_size);
 }
 
 void DEMO_update() {
-	u32 i;
-	for (i = 0; i < 3; ++i) {
-		f32 prog = (framenr * 0.02f) + (i * 5);
-		OBJECT_rotate(objectSymbol[i], sin(prog) * 0.04f, cos(prog) * 0.06f, 0);
-		f32 xoffset = (sin(prog * 1.3f) * 0.8f + (i * 0.3f) - 0.3f) * 20.0f;
-		f32 yoffset = (cos(prog) * 0.5f + (i * 0.2f) - 0.2f) * 20.0f;
-		f32 zoffset = cos(prog * 3) * 20.0f;
-		OBJECT_moveTo(objectSymbol[i], xoffset, yoffset, -50 + zoffset);
-	}
+	DEMO_update_scene2();
 	framenr++;
 }
 
 void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
+	DEMO_render_scene2(mainCamera, viewMtx);
+}
+
+void DEMO_render_scene1(camera_t* mainCamera, Mtx viewMtx) {
 	u32 i;
 
 	/* Render bitmaps */
@@ -92,7 +96,7 @@ void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
 	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
 	GX_SetZMode(GX_TRUE, GX_ALWAYS, GX_TRUE);
 	for (i = 0; i < 3; ++i) {
-		OBJECT_render(objectSymbol[i], viewMtx);
+		OBJECT_render(objectMine[i], viewMtx);
 	}
 
 	GX_SetZMode(GX_TRUE, GX_LESS, GX_FALSE);
@@ -102,4 +106,35 @@ void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
 	GXRModeObj* rmode = GXU_getMode();
 	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (framenr * 2.0f), rmode->viHeight - 120, 0, 0.5f, 8, framenr * 0.1f);
+}
+
+void DEMO_update_scene1() {
+	u32 i;
+	for (i = 0; i < 3; ++i) {
+		f32 prog = (framenr * 0.02f) + (i * 5);
+		OBJECT_rotate(objectMine[i], sin(prog) * 0.04f, cos(prog) * 0.06f, 0);
+		f32 xoffset = (sin(prog * 1.3f) * 0.8f + (i * 0.3f) - 0.3f) * 20.0f;
+		f32 yoffset = (cos(prog) * 0.5f + (i * 0.2f) - 0.2f) * 20.0f;
+		f32 zoffset = cos(prog * 3) * 20.0f;
+		OBJECT_moveTo(objectMine[i], xoffset, yoffset, -50 + zoffset);
+	}
+	framenr++;
+}
+
+void DEMO_render_scene2(camera_t* mainCamera, Mtx viewMtx) {
+	/* Background */
+	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+	SPRITE_render(spriteMagician);
+
+	/* Draw objects */
+	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
+	GXU_setLight(viewMtx, lightColor, (guVector) { 0, 0, 0 });
+	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+	OBJECT_render(objectCube, viewMtx);
+}
+
+void DEMO_update_scene2() {
+	f32 prog = framenr * 0.02f;
+	OBJECT_rotate(objectCube, sin(prog) * 0.04f, cos(prog) * 0.06f, 0);
 }
