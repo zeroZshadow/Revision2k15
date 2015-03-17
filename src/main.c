@@ -24,6 +24,8 @@ int main() {
 
 	AU_init();
 	GXU_init();
+	fioraSeed(0);
+
 	SCENE_load();
 
 	isRunning = TRUE;
