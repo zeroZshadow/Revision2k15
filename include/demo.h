@@ -16,11 +16,16 @@ void DEMO_init();
 void DEMO_update();
 void DEMO_update_scene1();
 void DEMO_update_scene2();
+void DEMO_update_scene3();
+void DEMO_update_scene4();
+
 
 /*! \brief Render demo
 */
 void DEMO_render(camera_t* mainCamera, Mtx viewMtx);
 void DEMO_render_scene1(camera_t* mainCamera, Mtx viewMtx);
 void DEMO_render_scene2(camera_t* mainCamera, Mtx viewMtx);
+void DEMO_render_scene3(camera_t* mainCamera, Mtx viewMtx);
+void DEMO_render_scene4(camera_t* mainCamera, Mtx viewMtx);
 
 #endif

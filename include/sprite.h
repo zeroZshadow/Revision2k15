@@ -53,4 +53,6 @@ void SPRITE_flush(sprite_t* sprite);
 */
 void SPRITE_moveTo(sprite_t* sprite, const f32 tX, const f32 tY, const f32 tDepth);
 
+void SPRITE_scaleTo(sprite_t* sprite, const f32 sX, const f32 sY, const f32 sZ);
+
 #endif
