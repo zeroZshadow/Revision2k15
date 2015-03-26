@@ -125,3 +125,10 @@ inline void MakeMatrix(transform_t* t) {
 
 	t->dirty = FALSE;
 }
+
+inline void SimpleMatrix(MtxP matrix, guQuaternion* rot, guVector* scale, guVector* pos) {
+	guMtxIdentity(matrix);
+	c_guMtxQuat(matrix, rot);
+	guMtxScaleApply(matrix, matrix, scale->x, scale->y, scale->z);
+	guMtxTransApply(matrix, matrix, pos->x, pos->y, pos->z);
+}

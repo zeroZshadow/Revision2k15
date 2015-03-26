@@ -55,15 +55,27 @@ static GXColor lightColor[] = {
 
 static guVector ballPos[] = {
 	//Front
-	{ -1, 1, 1 },
-	{ 1, 1, 1 },
-	{ 1, -1, 1 },
-	{ -1, -1, 1 },
+	{ -10, 10, 10 },
+	{ 10, 10, 10 },
+	{ 10, -10, 10 },
+	{ -10, -10, 10 },
 	//Back
-	{ -1, 1, -1 },
-	{ 1, 1, -1 },
-	{ 1, -1, -1 },
-	{ -1, -1, -1 }
+	{ -10, 10, -10 },
+	{ 10, 10, -10 },
+	{ 10, -10, -10 },
+	{ -10, -10, -10 }
+};
+
+static guVector ballPos2[] = {
+	//Line
+	{ 70.71067812, 70.71067812, 0 },
+	{ 0, 100, 0 },
+	{ -70.71067812, 70.71067812, 0 },
+	{ -100, 0, 0 },
+	{ -70.71067812, -70.71067812, 0 },
+	{ 0, -100, 0 },
+	{ 70.71067812, -70.71067812, 0 },
+	{ 100, 0, 0 },
 };
 
 void DEMO_init() {
@@ -254,43 +266,85 @@ void DEMO_render_scene3(camera_t* mainCamera, Mtx viewMtx) {
 	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (framenr * 2.0f), rmode->viHeight - 120, 0, 0.5f, 8, framenr * 0.1f);
 }
 
-u32 ballZindex[8];
+u32 spriteID[8];
+f32 spriteDepth[8];
+
+void SortSprites() {
+	u32 c, d, p;
+	for (c = 0; c < (8 - 1); c++) {
+		p = c;
+
+		for (d = c + 1; d < 8; d++) {
+			if (spriteDepth[p] > spriteDepth[d])
+				p = d;
+		}
+
+		if (p != c) {
+			//Swap depth
+			u32* spriteDepthu = (u32*)spriteDepth;
+			spriteDepthu[c] ^= spriteDepthu[p];
+			spriteDepthu[p] ^= spriteDepthu[c];
+			spriteDepthu[c] ^= spriteDepthu[p];
+
+			//Swap ID
+			spriteID[c] ^= spriteID[p];
+			spriteID[p] ^= spriteID[c];
+			spriteID[c] ^= spriteID[p];
+		}
+	}
+}
 
 void DEMO_update_scene4() {
 	u32 i;
-	float smallZ = 100;
-	float hwidth = 640 / 2;
-	float hheight = 528 / 2;
-	f32 prog = framenr * 0.02f;
+	GXRModeObj* rmode = GXU_getMode();
+	const float hwidth = rmode->viWidth / 2;
+	const float hheight = rmode->xfbHeight / 2;
+	const f32 prog = framenr * 0.04f;
 
-	Mtx mat;
-	guVector axis = (guVector) { 0, -1, -1 };
-	guMtxIdentity(mat);
-	guMtxRotAxisRad(mat, &axis, prog);
+	Mtx mat1, mat2;
+	guQuaternion quat;
+	guVector axis1 = (guVector) { 0, -1, -1 };
+	guVecNormalize(&axis1);
+	guVector axis2 = (guVector) { 0, 0, -1 };
 
-	//Preset sorting
-	ballZindex[0] = 0;
+	//Build matrix 1
+	AxisAngleToQuaternion(&quat, axis1, prog);
+	SimpleMatrix(mat1, &quat, &(guVector) { 5, 5, 5 }, &(guVector) { hwidth - 16, hheight - 16, 0 });
+
+	//Mat 2
+	AxisAngleToQuaternion(&quat, axis2, -prog * 2);
+	SimpleMatrix(mat2, &quat, &(guVector) { 1, 1, 1 }, &(guVector) { hwidth - 16, hheight - 16, 0 });
 
 	for (i = 0; i < 8; ++i) {
-		guVector pos;
-		guVecMultiply(mat, &ballPos[i], &pos);
-		float scale = (pos.z + 1.0f) * 0.5f + 1.0f;
+		guVector pos1, pos2, delta;
+		guVecMultiply(mat1, &ballPos[i], &pos1);
+		guVecMultiply(mat2, &ballPos2[i], &pos2);
 
-		SPRITE_moveTo(spriteBall[i], pos.x * 20 + hwidth, pos.y * 20 + hheight, -50 + scale);
+		float t = ((sin(prog * 0.1f) * 4 + 4) * 0.5f) - 2; t = t < 0 ? 0 : (t > 1 ? 1 : t);
+		guVecSub(&pos2, &pos1, &delta);
+		guVecScale(&delta, &delta, t);
+		guVecAdd(&pos1, &delta, &pos1);
+
+		float scale = ((pos1.z/50) + 1 / 0.5f) * 1;
+		SPRITE_moveTo(spriteBall[i], pos1.x, pos1.y, pos1.z - 150);
 		SPRITE_scaleTo(spriteBall[i], scale, scale, 1);
+
+		//Sorting
+		spriteID[i] = i;
+		spriteDepth[i] = pos1.z;
 	}
+
+	SortSprites();
 }
 
 void DEMO_render_scene4(camera_t* mainCamera, Mtx viewMtx) {
 	u32 i;
 
 	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
-	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, 0);
-	GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);
-	GX_SetZCompLoc(GX_FALSE);
+	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
 	for (i = 0; i < 8; ++i) {
-		SPRITE_render(spriteBall[i]);
+		SPRITE_render(spriteBall[spriteID[i]]);
 	}
-	GX_SetZCompLoc(GX_TRUE);
 }

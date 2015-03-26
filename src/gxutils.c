@@ -22,7 +22,7 @@ BOOL first_frame = FALSE;
 void *gpfifo = NULL;
 f32 aspectRatio;
 static f32 nearClip = 1.0f;
-static f32 farClip = 100.0f;
+static f32 farClip = 300.0f;
 Mtx44 orthographicMatrix;
 
 /* Texture file */
@@ -50,8 +50,8 @@ void GXU_init() {
 	if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
 
 	/* Enable USBGecko debugging */
-	//CON_EnableGecko(1, FALSE);
-	//CON_InitEx(rmode, 0, 0, rmode->viWidth, rmode->viHeight);
+	CON_EnableGecko(1, FALSE);
+	CON_InitEx(rmode, 0, 0, rmode->viWidth, rmode->xfbHeight);
 
 	/* Set aspect ratio */
 	aspectRatio = 4.f / 3.f;
@@ -84,7 +84,7 @@ void GXU_init() {
 
 	GX_SetPixelFmt(rmode->aa ? GX_PF_RGB565_Z16 : GX_PF_RGB8_Z24, GX_ZC_LINEAR);
 
-	GX_SetCullMode(GX_CULL_FRONT); //TODO: back to GX_CULL_FRONT
+	GX_SetCullMode(GX_CULL_FRONT);
 	GX_CopyDisp(xfb[fbi], GX_TRUE);
 	GX_SetDispCopyGamma(GX_GM_1_0);
 

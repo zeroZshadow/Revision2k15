@@ -2,7 +2,7 @@
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Gamecube|Win32'">
     <LocalDebuggerCommand>tools\Emulator\Dolphin.exe</LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>/b /e $(SolutionDir)revision2k15.elf</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/d /b /e $(SolutionDir)revision2k15.elf</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Wii|Win32'">
