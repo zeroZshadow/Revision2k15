@@ -50,7 +50,8 @@ void SPRITE_render(sprite_t* sprite) {
 	/* Set sprite texture */
 	GX_LoadTexObj(sprite->texture, GX_TEXMAP0);
 
-	/* Set color */
+	/* Set color and disable lighting*/
+	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
 	GX_SetChanAmbColor(GX_COLOR0A0, sprite->color);
 	GX_SetChanMatColor(GX_COLOR0A0, sprite->color);
 
@@ -90,5 +91,13 @@ void SPRITE_moveTo(sprite_t* sprite, const f32 tX, const f32 tY, const f32 tDept
 	t->position.x = tX;
 	t->position.y = tY;
 	t->position.z = tDepth;
+	t->dirty = TRUE;
+}
+
+void SPRITE_scaleTo(sprite_t* sprite, const f32 sX, const f32 sY, const f32 sZ) {
+	transform_t* t = &sprite->transform;
+	t->scale.x = sX;
+	t->scale.y = sY;
+	t->scale.z = sZ;
 	t->dirty = TRUE;
 }

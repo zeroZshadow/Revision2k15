@@ -1,6 +1,12 @@
-<filepath="font.png" id="fontTex" colfmt=6 />
 <filepath="white.png" id="whiteTex" colfmt=4 />
-<filepath="back.png" id="backTex" colfmt=6 />
-<filepath="fore.png" id="foreTex" colfmt=6 />
+
 <filepath="magician.png" id="magicianTex" colfmt=6 />
 <filepath="magicback.png" id="magicbackTex" colfmt=6 />
+
+<filepath="back.png" id="backTex" colfmt=6 />
+<filepath="fore.png" id="foreTex" colfmt=6 />
+
+<filepath="zombie.png" id="zombieTex" colfmt=6 />
+<filepath="font.png" id="fontTex" colfmt=6 />
+
+<filepath="ball.png" id="ballTex" colfmt=6 />

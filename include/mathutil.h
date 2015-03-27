@@ -104,6 +104,13 @@ void fioraSeed(u32 seed);
  */
 void MakeMatrix(transform_t* t);
 
+/*! \brief Make object matrix from properties
+*  \param matrix Matrix to store result into
+*  \param rot Rotation Quaternion
+*  \param scale Scale vector
+*  \param pos Position vector
+*/
+void SimpleMatrix(MtxP matrix, guQuaternion* rot, guVector* scale, guVector* pos);
 #endif
 
 
