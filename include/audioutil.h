@@ -18,4 +18,11 @@ void AU_playMusic(const void* music, const s32 size);
 
 void AU_stopMusic();
 
+s32 AU_getPos();
+
+/*! \brief Set the volume for the currently playing music
+*  \param volume new volume of music, 0 - 255
+*/
+void AU_setVolume(u8 volume);
+
 #endif

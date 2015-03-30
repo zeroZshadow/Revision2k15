@@ -44,7 +44,8 @@ sprite_t *spriteZombie;
 GXTexObj ballTexObj;
 sprite_t *spriteBall[8];
 
-int framenr = 0;
+s32 sceneoffset = 0;
+s32 scenetime = 0;
 
 /* Light */
 static GXColor lightColor[] = {
@@ -142,24 +143,26 @@ void DEMO_init() {
 	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256, 3.0f);
 
 	//Start music
-	//AU_playMusic(music_ogg, music_ogg_size);
+	AU_playMusic(music_ogg, music_ogg_size);
+	AU_setVolume(0); //TODO: REMOVE
 }
 
 void DEMO_update() {
-	DEMO_update_scene4();
-	framenr++;
+	scenetime = AU_getPos();
+
+	DEMO_update_scene2();
 }
 
 void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
-	DEMO_render_scene4(mainCamera, viewMtx);
+	DEMO_render_scene2(mainCamera, viewMtx);
 }
 
 void DEMO_update_scene1() {
 	//Move mines around
 	u32 i;
 	for (i = 0; i < 3; ++i) {
-		f32 prog = (framenr * 0.02f) + (i * 5);
-		OBJECT_rotate(objectMine[i], sin(prog) * 0.04f, cos(prog) * 0.06f, 0);
+		f32 prog = (scenetime * 0.001f) + (i * 5);
+		OBJECT_rotateTo(objectMine[i], sin(prog) * 2 + prog, cos(prog) * 3, 0);
 		f32 xoffset = (sin(prog * 1.3f) * 0.8f + (i * 0.3f) - 0.3f) * 20.0f;
 		f32 yoffset = (cos(prog) * 0.5f + (i * 0.2f) - 0.2f) * 20.0f;
 		f32 zoffset = cos(prog * 3) * 20.0f;
@@ -188,7 +191,7 @@ void DEMO_render_scene1(camera_t* mainCamera, Mtx viewMtx) {
 }
 
 void DEMO_update_scene2() {
-	f32 prog = framenr * 0.02f;
+	f32 prog = scenetime * 0.001f;
 	u32 i;
 	for (i = 0; i < cubeCount; ++i) {
 		f32 p = i <= (cubeCount >> 1) ? prog : -prog;
@@ -197,7 +200,7 @@ void DEMO_update_scene2() {
 		//offset + spread curve - bend
 		f32 ycurve = -8 + sin((p + i) * 2) * ((i % 51) * (7.0f / 30.0f)) - (fabs(xcurve) * 0.2f);
 		OBJECT_moveTo(objectCube[i], xcurve, ycurve + sin(p + i * 200) * 5, -50);
-		OBJECT_rotate(objectCube[i], 0.04f, 0.06f, 0);
+		OBJECT_rotateTo(objectCube[i], prog * 3, prog * 5, 0);
 
 		f32 scale = 2.0f * fabs(sin(p + i));
 		OBJECT_scaleTo(objectCube[i], scale, scale, scale);
@@ -205,7 +208,7 @@ void DEMO_update_scene2() {
 
 
 	//Slowly grow the cube
-	OBJECT_rotate(objectGrow, 0.05f, 0, 0);
+	OBJECT_rotateTo(objectGrow, prog * 3, 0, 0);
 
 	f32 scale = (prog * fabs(sin(prog)) * 3 + 5);
 	OBJECT_scaleTo(objectGrow, scale, scale, scale);
@@ -263,7 +266,7 @@ void DEMO_render_scene3(camera_t* mainCamera, Mtx viewMtx) {
 	/* Disable font */
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
 	GXRModeObj* rmode = GXU_getMode();
-	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (framenr * 2.0f), rmode->viHeight - 120, 0, 0.5f, 8, framenr * 0.1f);
+	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (scenetime * 0.1f), rmode->viHeight - 120, 0, 0.5f, 8, scenetime * 0.005f);
 }
 
 u32 spriteID[8];
@@ -299,7 +302,8 @@ void DEMO_update_scene4() {
 	GXRModeObj* rmode = GXU_getMode();
 	const float hwidth = rmode->viWidth / 2;
 	const float hheight = rmode->xfbHeight / 2;
-	const f32 prog = framenr * 0.04f;
+
+	const f32 prog = scenetime * 0.002f;
 
 	Mtx mat1, mat2;
 	guQuaternion quat;

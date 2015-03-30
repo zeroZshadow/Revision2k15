@@ -16,3 +16,11 @@ void AU_playMusic(const void* music, const s32 size) {
 void AU_stopMusic() {
 	StopOgg();
 }
+
+s32 AU_getPos() {
+	GetTimeOgg();
+}
+
+void AU_setVolume(u8 volume) {
+	SetVolumeOgg(volume);
+}
