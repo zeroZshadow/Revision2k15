@@ -111,11 +111,12 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@dollz3 $(OUTPUT).dol $(OUTPUT).mini.dol 
 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol $(OUTPUT).mini.dol 
 #---------------------------------------------------------------------------------
 run:	
 	$(DEVKITPRO)/emulators/gcube/gcube $(OUTPUT).dol

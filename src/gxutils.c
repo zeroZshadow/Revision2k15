@@ -32,7 +32,7 @@ void GXU_init() {
 	VIDEO_Init();
 
 	/* Get render mode */
-	rmode = VIDEO_GetPreferredMode(NULL);
+	rmode = VIDEO_GetPreferredMode(&TVPal528Int);
 
 	/* Allocate the fifo buffer */
 	gpfifo = memalign(32, DEFAULT_FIFO_SIZE);

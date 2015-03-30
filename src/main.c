@@ -10,18 +10,8 @@
 #include "mathutil.h"
 
 BOOL isRunning;
-s32 reset_func(s32 final);
-
-static sys_resetinfo resetinfo = {
-	{ NULL, NULL },
-	reset_func,
-	1
-};
 
 int main() {
-	/* Setup reset function */
-	SYS_RegisterResetFunc(&resetinfo);
-
 	AU_init();
 	GXU_init();
 	fioraSeed(0);
@@ -29,14 +19,11 @@ int main() {
 	SCENE_load();
 
 	isRunning = TRUE;
-	while (isRunning) {
+	while (isRunning && !SYS_ResetButtonDown()) {
 		SCENE_render();
 	}
 
-	return 0;
-}
+	SYS_ResetSystem(SYS_RESTART, 0, 0);
 
-s32 reset_func(s32 final) {
-	isRunning = FALSE;
-	return 1;
+	return 0;
 }
