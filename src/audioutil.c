@@ -18,7 +18,7 @@ void AU_stopMusic() {
 }
 
 s32 AU_getPos() {
-	GetTimeOgg();
+	return GetTimeOgg();
 }
 
 void AU_setVolume(u8 volume) {

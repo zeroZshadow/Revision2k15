@@ -7,6 +7,12 @@
 #include <ogc/gu.h>
 #include "scene.h"
 
+/* DEBUG MACROS */
+#define FUNC(func, id) RFUNC(func, id)
+#define RFUNC(func, id) func ## id
+#define RENDER(cam, mtx) FUNC(DEMO_render_scene, SCENEID)(cam,mtx)
+#define UPDATE() FUNC(DEMO_update_scene, SCENEID)()
+
 /*! \brief Initialize demo data
  */
 void DEMO_init();

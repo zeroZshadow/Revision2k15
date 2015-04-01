@@ -2,11 +2,11 @@
 #include "mathutil.h"
 #include <malloc.h>
 
-sprite_t* SPRITE_create(f32 x, f32 y, f32 depth, f32 width, f32 height) {
+sprite_t* SPRITE_create(f32 x, f32 y, f32 depth, f32 width, f32 height, GXTexObj* texture) {
 	sprite_t* sprite = malloc(sizeof(sprite_t));
 	sprite->width = width;
 	sprite->height = height;
-	sprite->texture = NULL;
+	sprite->texture = texture;
 	sprite->color = (GXColor) { 0xFF, 0xFF, 0xFF, 0xFF };
 
 	guMtxIdentity(sprite->transform.matrix);

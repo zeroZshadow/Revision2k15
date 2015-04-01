@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-model_t* MODEL_setup(const u8* model_bmb) {
+model_t* MODEL_setup(const u8* model_bmb, GXTexObj* textureObject) {
 	binheader_t* header = (binheader_t*) model_bmb;
 
 	const u32 posOffset = sizeof(binheader_t);
@@ -73,6 +73,7 @@ model_t* MODEL_setup(const u8* model_bmb) {
 	model->modelNormals = normals;
 	model->modelTexcoords = texcoords;
 	model->modelIndices = indices;
+	model->textureObject = textureObject;
 
 	return model;
 }

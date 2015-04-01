@@ -19,7 +19,7 @@ typedef struct {
 /*! \brief Create empty sprite
  *  \return Pointer to newly sprite structure
  */
-sprite_t* SPRITE_create(f32 x, f32 y, f32 depth, f32 width, f32 height);
+sprite_t* SPRITE_create(f32 x, f32 y, f32 depth, f32 width, f32 height, GXTexObj* texture);
 
 /*! \brief Frees a sprite
  *  \param sprite Sprite to destroy

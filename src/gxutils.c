@@ -11,8 +11,6 @@
 /* Texture definition */
 #include "textures_tpl.h"
 
-const TexSize TexSize256 = 1.f / 256.f;
-
 /* GX vars */
 #define DEFAULT_FIFO_SIZE	(256*1024)
 static void *xfb[2] = { NULL, NULL };
@@ -32,7 +30,7 @@ void GXU_init() {
 	VIDEO_Init();
 
 	/* Get render mode */
-	rmode = VIDEO_GetPreferredMode(&TVPal528Int);
+	rmode = VIDEO_GetPreferredMode(NULL); //&TVPal528Int
 
 	/* Allocate the fifo buffer */
 	gpfifo = memalign(32, DEFAULT_FIFO_SIZE);
@@ -105,6 +103,7 @@ void GXU_init() {
 
 void GXU_loadTexture(s32 texId, GXTexObj* texObj) {
 	TPL_GetTexture(&TPLfile, texId, texObj);
+	GX_InitTexObjWrapMode(texObj, GX_CLAMP, GX_CLAMP);
 }
 
 void GXU_done() {

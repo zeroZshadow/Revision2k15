@@ -41,11 +41,12 @@ GXTexObj zombieTexObj;
 object_t *objectGothic;
 sprite_t *spriteZombie;
 //Scene 4
-GXTexObj ballTexObj;
-sprite_t *spriteBall[8];
+GXTexObj ballTexObj[2], demonTexObj;
+sprite_t *spriteBall[8], *spriteDemon;
 
 s32 sceneoffset = 0;
 s32 scenetime = 0;
+u8 scenecount = 0;
 
 /* Light */
 static GXColor lightColor[] = {
@@ -94,31 +95,30 @@ void DEMO_init() {
 	//Scene 3
 	GXU_loadTexture(zombieTex, &zombieTexObj);
 	//Scene 4
-	GXU_loadTexture(ballTex, &ballTexObj);
+	GXU_loadTexture(ballTex, &ballTexObj[0]);
+	GX_InitTexObjFilterMode(&ballTexObj[0], GX_NEAR, GX_NEAR); //Point filtering
+	GXU_loadTexture(ball2Tex, &ballTexObj[1]);
+	GX_InitTexObjFilterMode(&ballTexObj[1], GX_NEAR, GX_NEAR); //Point filtering
+	GXU_loadTexture(isabellaTex, &demonTexObj);
+
+	//Invalidate texture cache
 	GX_InvalidateTexAll();
 
 	//Meshes
-	modelMine = MODEL_setup(mine_bmb);
-	modelCube = MODEL_setup(cube_bmb);
-	modelGothic = MODEL_setup(gothicube_bmb);
-	MODEL_setTexture(modelMine, &whiteTexObj);
-	MODEL_setTexture(modelCube, &whiteTexObj);
-	MODEL_setTexture(modelGothic, &whiteTexObj);
+	modelMine = MODEL_setup(mine_bmb, &whiteTexObj);
+	modelCube = MODEL_setup(cube_bmb, &whiteTexObj);
+	modelGothic = MODEL_setup(gothicube_bmb, &whiteTexObj);
 
 	//Sprites
-	spriteBackground = SPRITE_create(0, 0, -10, 640, 528);
-	spriteForeground = SPRITE_create(0, 0, -10, 640, 528);
-	spriteMagician = SPRITE_create(0, 0, -10, 640, 528);
-	spriteMagicback = SPRITE_create(0, 0, -10, 640, 528);
-	spriteZombie = SPRITE_create(0, 0, -80, 640, 528);
-	SPRITE_setTexture(spriteBackground, &backTexObj);
-	SPRITE_setTexture(spriteForeground, &foreTexObj);
-	SPRITE_setTexture(spriteMagician, &magicianTexObj);
-	SPRITE_setTexture(spriteMagicback, &magicbackTexObj);
-	SPRITE_setTexture(spriteZombie, &zombieTexObj);
+	spriteBackground = SPRITE_create(0, 0, -10, 640, 528, &backTexObj);
+	spriteForeground = SPRITE_create(0, 0, -10, 640, 528, &foreTexObj);
+	spriteMagician = SPRITE_create(0, 0, -10, 640, 528, &magicianTexObj);
+	spriteMagicback = SPRITE_create(0, 0, -10, 640, 528, &magicbackTexObj);
+	spriteZombie = SPRITE_create(0, 0, -80, 640, 528, &zombieTexObj);
+	spriteDemon = SPRITE_create(0, 0, -280, 640, 528, &demonTexObj);
+
 	for (i = 0; i < 8; i++) {
-		spriteBall[i] = SPRITE_create(640/2, 528/2, -50, 32, 32);
-		SPRITE_setTexture(spriteBall[i], &ballTexObj);
+		spriteBall[i] = SPRITE_create(640 / 2, 528 / 2, -50, 32, 32, &ballTexObj[i%2]);
 	}
 
 	//Objects
@@ -144,17 +144,57 @@ void DEMO_init() {
 
 	//Start music
 	AU_playMusic(music_ogg, music_ogg_size);
-	AU_setVolume(0); //TODO: REMOVE
+	AU_setVolume(255); //TODO: REMOVE
 }
+
+//#define SCENEID 4
 
 void DEMO_update() {
 	scenetime = AU_getPos();
 
-	DEMO_update_scene2();
+#ifdef SCENEID
+	UPDATE();
+#else
+	switch (scenecount) {
+	case 0:
+		DEMO_update_scene2();
+		if (scenetime > 17851) {
+			sceneoffset = 17851;
+			scenecount++;
+		} //Timing done!
+		break;
+	case 1:
+		DEMO_update_scene1();
+		if (scenetime > 40000) {
+			sceneoffset = 40000;
+			scenecount++;
+		}
+			break;
+	case 2:
+		DEMO_update_scene3();
+		if (scenetime > 80000) {
+			sceneoffset = 80000;
+			scenecount++;
+		}
+			break;
+	case 3:
+		DEMO_update_scene4();
+		break;
+	}
+#endif
 }
 
 void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
-	DEMO_render_scene2(mainCamera, viewMtx);
+#ifdef SCENEID
+	RENDER(mainCamera, viewMtx);
+#else
+	switch (scenecount) {
+	case 0: DEMO_render_scene2(mainCamera, viewMtx); break;
+	case 1: DEMO_render_scene1(mainCamera, viewMtx); break;
+	case 2: DEMO_render_scene3(mainCamera, viewMtx); break;
+	case 3: DEMO_render_scene4(mainCamera, viewMtx); break;
+	}
+#endif
 }
 
 void DEMO_update_scene1() {
@@ -324,12 +364,12 @@ void DEMO_update_scene4() {
 		guVecMultiply(mat1, &ballPos[i], &pos1);
 		guVecMultiply(mat2, &ballPos2[i], &pos2);
 
-		float t = ((sin(prog * 0.1f) * 4 + 4) * 0.5f) - 2; t = t < 0 ? 0 : (t > 1 ? 1 : t);
+		float t = ((sin(prog * 0.1f) * 2 + 2) * 0.5f) - 1; t = t < 0 ? 0 : (t > 1 ? 1 : t);
 		guVecSub(&pos2, &pos1, &delta);
 		guVecScale(&delta, &delta, t);
 		guVecAdd(&pos1, &delta, &pos1);
 
-		float scale = ((pos1.z/50) + 1 / 0.5f) * 1;
+		float scale = ((pos1.z / 50) + 1 / 0.5f) * 1;
 		SPRITE_moveTo(spriteBall[i], pos1.x, pos1.y, pos1.z - 150);
 		SPRITE_scaleTo(spriteBall[i], scale, scale, 1);
 
@@ -343,6 +383,10 @@ void DEMO_update_scene4() {
 
 void DEMO_render_scene4(camera_t* mainCamera, Mtx viewMtx) {
 	u32 i;
+
+	/* Render bitmaps */
+	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+	SPRITE_render(spriteDemon);
 
 	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
 	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
