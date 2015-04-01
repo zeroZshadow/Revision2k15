@@ -37,8 +37,12 @@ void GXU_init() {
 	memset(gpfifo, 0, DEFAULT_FIFO_SIZE);
 
 	/* Allocate frame buffers */
-	xfb[0] = SYS_AllocateFramebuffer(rmode);
-	xfb[1] = SYS_AllocateFramebuffer(rmode);
+	xfb[0] = (u32 *)MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
+	xfb[1] = (u32 *)MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
+
+	/* Clean buffers */
+	VIDEO_ClearFrameBuffer(rmode, xfb[0], COLOR_BLACK);
+	VIDEO_ClearFrameBuffer(rmode, xfb[1], COLOR_BLACK);
 
 	VIDEO_Configure(rmode);
 	VIDEO_SetNextFramebuffer(xfb[fbi]);
@@ -48,8 +52,8 @@ void GXU_init() {
 	if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
 
 	/* Enable USBGecko debugging */
-	CON_EnableGecko(1, FALSE);
-	CON_InitEx(rmode, 0, 0, rmode->viWidth, rmode->xfbHeight);
+	//CON_EnableGecko(1, FALSE);
+	//CON_InitEx(rmode, 0, 0, rmode->viWidth, rmode->xfbHeight);
 
 	/* Set aspect ratio */
 	aspectRatio = 4.f / 3.f;
