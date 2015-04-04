@@ -18,33 +18,42 @@
 #include "mine_bmb.h"
 #include "gothicube_bmb.h"
 #include "cube_bmb.h"
+#include "revision_bmb.h"
 
 #include "music_ogg.h"
 
 /* Data vars */
-GXTexObj whiteTexObj, fontTexObj;
+GXTexObj whiteTexObj, fontTexObj, font2TexObj;
 sprite_t *spriteFade;
-font_t* font;
+font_t *font, *font2;
 
-//Scene 1
+//Scene 0
 model_t *modelMine;
 GXTexObj backTexObj, foreTexObj;
 object_t *objectMine[3];
 sprite_t* spriteBackground, *spriteForeground;
-//Scene 2
+//Scene 1
 #define cubeCount 64
 model_t *modelCube;
 GXTexObj magicianTexObj, magicbackTexObj;
 object_t *objectCube[cubeCount], *objectGrow;
 sprite_t *spriteMagician, *spriteMagicback;
-//Scene 3
+//Scene 2
 model_t *modelGothic;
 GXTexObj zombieTexObj;
 object_t *objectGothic;
 sprite_t *spriteZombie;
+//Scene 3
+GXTexObj ballTexObj[2], isabellaTexObj;
+sprite_t *spriteBall[8], *spriteIsabella;
 //Scene 4
-GXTexObj ballTexObj[2], demonTexObj;
-sprite_t *spriteBall[8], *spriteDemon;
+GXTexObj introTexObj;
+sprite_t *spriteIntro;
+//Scene 5
+model_t *modelRevision;
+GXTexObj outroTexObj;
+object_t *objectRevision;
+sprite_t *spriteOutro;
 
 //Scene timing and index
 s32 sceneoffset = 0;
@@ -54,13 +63,6 @@ u8 scenecount = -1;
 
 //Fade info
 s32 fadestart = -1;
-
-/* Light */
-static GXColor lightColor[] = {
-	{ 0x33, 0xCC, 0x33, 0xFF }, /* Light color 1 */
-	{ 0x66, 0x66, 0xff, 0xFF }, /* Ambient 1 */
-	{ 0xFF, 0xFF, 0xFF, 0xFF }  /* Material 1 */
-};
 
 static guVector ballPos[] = {
 	//Front
@@ -92,21 +94,26 @@ void DEMO_init() {
 
 	//Textures
 	GXU_loadTexture(whiteTex, &whiteTexObj);
+	GXU_loadTexture(fontTex, &fontTexObj);
+	GXU_loadTexture(font2Tex, &font2TexObj);
+	//Scene 0
+	GXU_loadTexture(backTex, &backTexObj);
 	GXU_loadTexture(foreTex, &foreTexObj);
 	//Scene 1
-	GXU_loadTexture(backTex, &backTexObj);
-	GXU_loadTexture(fontTex, &fontTexObj);
-	//Scene 2
 	GXU_loadTexture(magicianTex, &magicianTexObj);
 	GXU_loadTexture(magicbackTex, &magicbackTexObj);
-	//Scene 3
+	//Scene 2
 	GXU_loadTexture(zombieTex, &zombieTexObj);
-	//Scene 4
+	//Scene 3
 	GXU_loadTexture(ballTex, &ballTexObj[0]);
 	GX_InitTexObjFilterMode(&ballTexObj[0], GX_NEAR, GX_NEAR); //Point filtering
 	GXU_loadTexture(ball2Tex, &ballTexObj[1]);
 	GX_InitTexObjFilterMode(&ballTexObj[1], GX_NEAR, GX_NEAR); //Point filtering
-	GXU_loadTexture(isabellaTex, &demonTexObj);
+	GXU_loadTexture(isabellaTex, &isabellaTexObj);
+	//Scene 4
+	GXU_loadTexture(introTex, &introTexObj);
+	//Scene 5
+	GXU_loadTexture(outroTex, &outroTexObj);
 
 	GXU_closeTPL();
 
@@ -117,14 +124,18 @@ void DEMO_init() {
 	modelMine = MODEL_setup(mine_bmb, &whiteTexObj);
 	modelCube = MODEL_setup(cube_bmb, &whiteTexObj);
 	modelGothic = MODEL_setup(gothicube_bmb, &whiteTexObj);
+	modelRevision = MODEL_setup(revision_bmb, &whiteTexObj);
 
 	//Sprites
+	//GXRModeObj* rmode = GXU_getMode();
 	spriteBackground = SPRITE_create(0, 0, -10, 640, 528, &backTexObj);
 	spriteForeground = SPRITE_create(0, 0, -10, 640, 528, &foreTexObj);
 	spriteMagician = SPRITE_create(0, 0, -10, 640, 528, &magicianTexObj);
 	spriteMagicback = SPRITE_create(0, 0, -10, 640, 528, &magicbackTexObj);
 	spriteZombie = SPRITE_create(0, 0, -80, 640, 528, &zombieTexObj);
-	spriteDemon = SPRITE_create(0, 0, -280, 640, 528, &demonTexObj);
+	spriteIsabella = SPRITE_create(0, 0, -280, 640, 528, &isabellaTexObj);
+	spriteIntro = SPRITE_create(0, 0, -280, 640, 528, &introTexObj);
+	spriteOutro = SPRITE_create(0, 0, -280, 640, 528, &outroTexObj);
 
 	spriteFade = SPRITE_create(0, 0, -1, 640, 528, &whiteTexObj);
 
@@ -149,34 +160,54 @@ void DEMO_init() {
 	//Gothic
 	objectGothic = OBJECT_create(modelGothic);
 	OBJECT_moveTo(objectGothic, -10, -6, -50);
+	//Revision
+	objectRevision = OBJECT_create(modelRevision);
+	OBJECT_scaleTo(objectRevision, .1f, .1f, .1f);
+	OBJECT_moveTo(objectRevision, 0, -6, -50);
 
 	//Fonts
 	font = FONT_load(&fontTexObj, " !,.0123456789:<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 12, 22, 256, 3.0f);
+	font2 = FONT_load(&font2TexObj, " abcdefghijklmnopqrstuvwxyz1234567890/:;@!?'&.,-=+", 31, 64, 320, 0.5f);
 
 	//Start music
 	AU_playMusic(music_ogg, music_ogg_size);
-	AU_setVolume(0); //TODO: REMOVE
+	AU_setVolume(255); //TODO: REMOVE
 }
 
 // 0 WHITE GIRL
 // 1 WIZARD
 // 2 DARK GIRL
 // 3 SPRITES
+// 4 INTRO
+// 5 DESIRE
 
 u32 scriptIndex = 0;
 const s32 scriptList[] = {
-	SCENE, 2,	//DARKGIRL
-	WAITTILL, 19500,
+	SCENE, 4,	//INTRO
+	WAITTILLSUB, 12000,
+
 	FADESLIDEOUT, 500,
-	SCENE, 1,	//WIZARD
+	SCENE, 5,	//DESIRE
 	FADEIN, 500,
-	WAITTILL, 37851,
-	SCENE, 0,	//WHITEGIRL
-	WAITTILL, 54500,
+	WAITTILLSUB, 36000,
+
+	FADESLIDEOUT, 500,
+	SCENE, 2,	//DARK GIRL
+	FADEIN, 500,
+	WAITTILLSUB, 23000,
+
 	FADEOUT, 500,
-	SCENE, 3,	//SPRITES
+	SCENE, 1,	//WIZARD
 	FADESLIDEIN, 500,
-	WAITTILL, 75000,
+	WAITTILLSUB, 17851,
+
+	SCENE, 0,	//WHITE GIRL
+	WAITTILLSUB, 30000,
+	FADEOUT, 500,
+
+	SCENE, 3,	//SPRITES
+	FADEIN, 500,
+	WAITTILL, 195000,
 	FADEOUT, 5000,
 	EXIT
 };
@@ -203,6 +234,14 @@ BOOL DEMO_script() {
 				//Grab param
 				t = scriptList[scriptIndex + 1];
 				if (scenetime >= t) {
+					scriptIndex += 2;
+					loop = TRUE;
+				}
+				break;
+			case WAITTILLSUB:
+				//Grab param
+				t = scriptList[scriptIndex + 1];
+				if (subscenetime >= t) {
 					scriptIndex += 2;
 					loop = TRUE;
 				}
@@ -257,6 +296,8 @@ void DEMO_update() {
 	case 1:	DEMO_update_scene1();break;
 	case 2:	DEMO_update_scene2();break;
 	case 3:	DEMO_update_scene3();break;
+	case 4:	DEMO_update_scene4(); break;
+	case 5:	DEMO_update_scene5(); break;
 	}
 }
 
@@ -266,12 +307,14 @@ void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
 	case 1: DEMO_render_scene1(mainCamera, viewMtx); break;
 	case 2: DEMO_render_scene2(mainCamera, viewMtx); break;
 	case 3: DEMO_render_scene3(mainCamera, viewMtx); break;
+	case 4: DEMO_render_scene4(mainCamera, viewMtx); break;
+	case 5: DEMO_render_scene5(mainCamera, viewMtx); break;
 	}
 }
 
 void DEMO_update_scene0() {
 	//popin scaler
-	f32 popin = subscenetime / 1000.0f; popin = (popin > 1.0f ? 1.0f : popin) * 0.2f;
+	f32 popin = subscenetime / 6000.0f; popin = (popin > 1.0f ? 1.0f : popin) * 0.2f;
 
 	//Move mines around
 	u32 i;
@@ -308,6 +351,16 @@ void DEMO_render_scene0(camera_t* mainCamera, Mtx viewMtx) {
 
 void DEMO_update_scene1() {
 	f32 prog = subscenetime * 0.001f;
+	f32 fade = 0;
+	f32 fade2 = 0;
+
+	if (subscenetime > 2000) {
+		fade = (subscenetime - 2000) / 1000.0f; fade = fade > 1.0f ? 1.0f : fade;
+	}
+	if (subscenetime > 5000) {
+		fade2 = (subscenetime - 5000) / 1000.0f; fade2 = fade2 > 1.0f ? 1.0f : fade2;
+	}
+
 	u32 i;
 	for (i = 0; i < cubeCount; ++i) {
 		f32 p = i <= (cubeCount >> 1) ? prog : -prog;
@@ -318,7 +371,7 @@ void DEMO_update_scene1() {
 		OBJECT_moveTo(objectCube[i], xcurve, ycurve + sin(p + i * 200) * 5, -50);
 		OBJECT_rotateTo(objectCube[i], prog * 3, prog * 5, 0);
 
-		f32 scale = 2.0f * fabs(sin(p + i));
+		f32 scale = 2.0f * fabs(sin(p + i)) * fade;
 		OBJECT_scaleTo(objectCube[i], scale, scale, scale);
 	}
 
@@ -326,7 +379,7 @@ void DEMO_update_scene1() {
 	//Slowly grow the cube
 	OBJECT_rotateTo(objectGrow, prog * 3, 0, 0);
 
-	f32 scale = (prog * fabs(sin(prog)) * 3 + 5);
+	f32 scale = (prog * fabs(sin(prog)) * 3 + 5) * fade2;
 	OBJECT_scaleTo(objectGrow, scale, scale, scale);
 }
 
@@ -339,52 +392,85 @@ void DEMO_render_scene1(camera_t* mainCamera, Mtx viewMtx) {
 	SPRITE_render(spriteMagician);
 
 	/* Draw objects */
-	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
-	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
-	GX_SetZMode(GX_TRUE, GX_ALWAYS, GX_TRUE);
-	for (i = 0; i < cubeCount; ++i) {
-		OBJECT_render(objectCube[i], viewMtx);
+	if (subscenetime > 2000) {
+		GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+		GX_SetZMode(GX_TRUE, GX_ALWAYS, GX_TRUE);
+		for (i = 0; i < cubeCount; ++i) {
+			OBJECT_render(objectCube[i], viewMtx);
+		}
+
+		GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
+		SPRITE_render(spriteMagicback);
+
+
+		//Grow cube
+		GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
+		GX_SetZMode(GX_TRUE, GX_ALWAYS, GX_TRUE);
+		OBJECT_render(objectGrow, viewMtx);
+
+		GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
+		SPRITE_render(spriteForeground);
 	}
-
-	GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);
-	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
-	SPRITE_render(spriteMagicback);
-
-
-	//Grow cube
-	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
-	GX_SetZMode(GX_TRUE, GX_ALWAYS, GX_TRUE);
-	OBJECT_render(objectGrow, viewMtx);
-
-	GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);
-	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
-	SPRITE_render(spriteForeground);
 }
 
 void DEMO_update_scene2() {
 	f32 prog = subscenetime * 0.005f;
 
+	const u32 effectdelay = 15000;
+	const f32 duration = 3000;
+	f32 scale = 0;
+
+	if (subscenetime > effectdelay) {
+		scale = ((subscenetime - effectdelay) / duration); //Lerp
+		scale = scale > 1.0f ? 1.0f : scale; //Clamp
+	}
+
 	//rotate the cube
+	OBJECT_scaleTo(objectGothic, scale, scale, scale);
 	OBJECT_rotateTo(objectGothic, prog * 0.1f, prog * 0.5f, 0);
 }
 
+static GXColor lightGoth[] = {
+	{ 0x33, 0xCC, 0x33, 0xFF }, /* Light color 1 */
+	{ 0x66, 0x66, 0xff, 0xFF }, /* Ambient 1 */
+	{ 0xFF, 0xFF, 0xFF, 0xFF }  /* Material 1 */
+};
+
 void DEMO_render_scene2(camera_t* mainCamera, Mtx viewMtx) {
+	f32 textoffset = 0;
+
 	/* Render bitmaps */
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
 	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
 	SPRITE_render(spriteZombie);
 
 	/* Draw objects */
-	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
-	GXU_setLight(viewMtx, lightColor, (guVector) { 0, 0, 1 });
-	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
-	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
-	OBJECT_render(objectGothic, viewMtx);
+	if (subscenetime > 15000) {
+		GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
+		GXU_setLight(viewMtx, lightGoth[0], (guVector) { 0, 0, 1 });
+		GX_SetChanAmbColor(GX_COLOR0A0, lightGoth[1]);
+		GX_SetChanMatColor(GX_COLOR0A0, lightGoth[2]);
+		GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+		OBJECT_render(objectGothic, viewMtx);
+	}
+
+	if (subscenetime < 12000) {
+		textoffset = (subscenetime / 2000.0f);
+		textoffset = textoffset > 1.0f ? 1.0f : textoffset; //Clamp
+		textoffset = (textoffset * 200) - 200;
+	} else {
+		textoffset = (subscenetime - 12000) / 2500.0f;
+		textoffset = textoffset > 1.0f ? 1.0f : textoffset; //Clamp
+		textoffset = (textoffset * -200);
+	}
 
 	/* Disable font */
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
-	GXRModeObj* rmode = GXU_getMode();
-	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (subscenetime * 0.1f), rmode->viHeight - 120, 0, 0.5f, 8, subscenetime * 0.005f);
+	FONT_draw(font2, "code:\nzerozshadow\n\nmusic:\ndefcon8\n\ngraphics:\nanathematixs\nbokanoid\ngiz\nfrostlines\nisabella\nhammerfist\n\n3d:\nmaali", textoffset + 10 , 10, FALSE);
 }
 
 u32 spriteID[8];
@@ -459,20 +545,103 @@ void DEMO_update_scene3() {
 	SortSprites();
 }
 
+const char* fillertext = "so the revision rocket also found itself a planet looking like a cube. not a normal cube, not even a gothic cube but a gamecube and we hope that the pilots enjoyed our compofiller 2.0. we send our love to desire and friends either with us at revision 2015 or at home on their sofa.....  ...   ..  .";
+
 void DEMO_render_scene3(camera_t* mainCamera, Mtx viewMtx) {
-	u32 i;
+	u32 i, m = 0;
+	const u32 effectdelay = 2000;
+	const u32 spawndelay = 300;
+
+	if (subscenetime > effectdelay) {
+		m = ((subscenetime - effectdelay) / spawndelay); m = m > 8 ? 8 : m;
+	}
 
 	/* Render bitmaps */
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
-	SPRITE_render(spriteDemon);
+	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+	SPRITE_render(spriteIsabella);
 
 	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
 	GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, 0);
 	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+
+
 	for (i = 0; i < 8; ++i) {
-		SPRITE_render(spriteBall[spriteID[i]]);
+		if (spriteID[i] < m) { //Check here since the stuff is sorted
+			SPRITE_render(spriteBall[spriteID[i]]);
+		}
 	}
+
+	GXRModeObj* rmode = GXU_getMode();
+	FONT_drawScroller(font, fillertext, rmode->viWidth - ((subscenetime - 8000) * 0.2f), rmode->viHeight - 120, 0, 0.5f, 8, subscenetime * 0.005f);
+}
+
+//INTRO
+void DEMO_update_scene4() {
+
+}
+
+void DEMO_render_scene4(camera_t* mainCamera, Mtx viewMtx) {
+	/* Render bitmaps */
+	if (subscenetime > 7000) {
+		GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+		SPRITE_render(spriteIntro);
+	} else {
+
+		/* font */
+		GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+		GXRModeObj* rmode = GXU_getMode();
+		FONT_draw(font, "desire 2015", rmode->viWidth / 2, rmode->viHeight / 2 - 30 , TRUE);
+		FONT_draw(font, "for gamecube", rmode->viWidth / 2, rmode->viHeight / 2 + 60, TRUE);
+	}	
+}
+
+//REVISION
+void DEMO_update_scene5() {
+	f32 prog = subscenetime * 0.005f;
+	const u32 effectdelay = 5000;
+	const f32 duration = 3000;
+	const f32 displacement = -100;
+	f32 offset = displacement;
+
+	if (subscenetime > effectdelay) {
+		offset = ((subscenetime - effectdelay) / duration); //Lerp
+		offset = offset > 1.0f ? 1.0f : offset; //Clamp
+		offset = (1.0f - offset )* displacement; //Scale
+	}
+
+	//rotate the cube
+	OBJECT_rotateTo(objectRevision, prog * 0.1f, prog * 0.5f, 0);
+	OBJECT_moveTo(objectRevision, (sin(prog * 0.1f) * 20) + offset, -6, -50);
+}
+
+static GXColor lightRevision[] = {
+	{ 0xeb, 0x6c, 0x05, 0xFF }, /* Light color 1 */
+	{ 0x66, 0x66, 0x66, 0xFF }, /* Ambient 1 */
+	{ 0xFF, 0xFF, 0xFF, 0xFF }  /* Material 1 */
+};
+
+void DEMO_render_scene5(camera_t* mainCamera, Mtx viewMtx) {
+	/* Render bitmaps */
+	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+	SPRITE_render(spriteOutro);
+
+	/* revision */
+	GX_LoadProjectionMtx(mainCamera->perspectiveMtx, GX_PERSPECTIVE);
+	GXU_setLight(viewMtx, lightRevision[0], (guVector) { 0, 0, 1 });
+	GX_SetChanAmbColor(GX_COLOR0A0, lightRevision[1]);
+	GX_SetChanMatColor(GX_COLOR0A0, lightRevision[2]);
+	GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
+	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+	OBJECT_render(objectRevision, viewMtx);
+
+	/* font */
+	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+	GXRModeObj* rmode = GXU_getMode();
+	FONT_drawScroller(font, "darkness falls when i am trapped between the dark forces of desire where pixels are set and code is altered, almost done before it is nintendowned and the compo is filled.", rmode->viWidth - (subscenetime * 0.2f), rmode->viHeight - 120, 0, 0.5f, 8, subscenetime * 0.005f);
 }
 
 BOOL DEMO_fadeSlideOut(s32 length) {

@@ -103,8 +103,8 @@ void _FONT_Rect(font_t* font, u32 index, f32 x, f32 y) {
 void FONT_draw(font_t* font, const char* message, f32 x, f32 y, BOOL center) {
 	const u16 messagelength = strlen(message);
 	const char* msgpointer = message;
-	const f32 height = font->height;
-	const f32 width = font->width;
+	const f32 height = font->height * font->scale;
+	const f32 width = font->width * font->scale;
 
 	_FONT_Prep(font);
 

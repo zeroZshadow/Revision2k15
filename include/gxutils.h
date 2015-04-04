@@ -38,7 +38,7 @@ void GXU_loadTexture(s32 texId, GXTexObj* texObj);
  *  \param lightColor Colors of Diffuse, Ambient and Material lights
  *  \param lpos Light position in the world
  */
-void GXU_setLight(Mtx view, GXColor lightColor[], guVector lpos);
+void GXU_setLight(Mtx view, GXColor lightColor, guVector lpos);
 
 /*! \brief Set light
 *  \param view View matrix

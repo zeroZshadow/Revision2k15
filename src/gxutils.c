@@ -30,7 +30,7 @@ void GXU_init() {
 	VIDEO_Init();
 
 	/* Get render mode */
-	rmode = VIDEO_GetPreferredMode(&TVPal528Int);
+	rmode = &TVPal528Int;//VIDEO_GetPreferredMode(NULL);
 
 	/* Allocate the fifo buffer */
 	gpfifo = memalign(32, DEFAULT_FIFO_SIZE);
@@ -70,13 +70,12 @@ void GXU_init() {
 	GX_Init(gpfifo, DEFAULT_FIFO_SIZE);
 
 	/* Clear the background to black and clear the Z buf */
-	GXColor background = { 0x50, 0x50, 0x50, 0xff };
+	GXColor background = { 0x00, 0x00, 0x00, 0xff };
 	GX_SetCopyClear(background, GX_MAX_Z24);
 
-	f32 yscale = GX_GetYScaleFactor(rmode->efbHeight, rmode->xfbHeight);
-	u32 xfbHeight = GX_SetDispCopyYScale(yscale);
+	GX_SetDispCopyYScale(GX_GetYScaleFactor(rmode->efbHeight, rmode->xfbHeight) );
 	GX_SetDispCopySrc(0, 0, rmode->fbWidth, rmode->efbHeight);
-	GX_SetDispCopyDst(rmode->fbWidth, xfbHeight);
+	GX_SetDispCopyDst(rmode->fbWidth, rmode->xfbHeight);
 	GX_SetCopyFilter(rmode->aa, rmode->sample_pattern, GX_TRUE, rmode->vfilter);
 	GX_SetFieldMode(rmode->field_rendering, ((rmode->viHeight == 2 * rmode->xfbHeight) ? GX_ENABLE : GX_DISABLE));
 
@@ -133,20 +132,18 @@ void GXU_done() {
 	fbi ^= 1;
 }
 
-void GXU_setLight(Mtx view, GXColor lightColor[], guVector lpos) {
+void GXU_setLight(Mtx view, GXColor lightColor, guVector lpos) {
 	GXLightObj lobj;
 
 	guVecMultiply(view, &lpos, &lpos);
 
 	GX_InitLightPos(&lobj, lpos.x, lpos.y, lpos.z);
-	GX_InitLightColor(&lobj, lightColor[0]);
+	GX_InitLightColor(&lobj, lightColor);
 	GX_LoadLightObj(&lobj, GX_LIGHT0);
 
 	/* Set number of rasterized color channels */
 	GX_SetNumChans(1);
 	GX_SetChanCtrl(GX_COLOR0A0, GX_ENABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
-	GX_SetChanAmbColor(GX_COLOR0A0, lightColor[1]);
-	GX_SetChanMatColor(GX_COLOR0A0, lightColor[2]);
 }
 
 void GXU_setDirLight(Mtx view, GXColor lightColor[], guVector ldir) {

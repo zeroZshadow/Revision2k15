@@ -1,15 +1,18 @@
 <filepath="white.png" id="whiteTex" colfmt=4 />
 
-<filepath="magician.png" id="magicianTex" colfmt=6 />
-<filepath="magicback.png" id="magicbackTex" colfmt=6 />
+<filepath="magician.png" id="magicianTex" colfmt=4 />
+<filepath="magicback.png" id="magicbackTex" colfmt=4 />
 
-<filepath="back.png" id="backTex" colfmt=6 />
-<filepath="fore.png" id="foreTex" colfmt=6 />
+<filepath="back.png" id="backTex" colfmt=4 />
+<filepath="fore.png" id="foreTex" colfmt=4 />
 
-<filepath="zombie.png" id="zombieTex" colfmt=6 />
-<filepath="font.png" id="fontTex" colfmt=6 />
+<filepath="zombie.png" id="zombieTex" colfmt=4 />
+<filepath="font.png" id="fontTex" colfmt=5 />
+<filepath="font2.png" id="font2Tex" colfmt=5 />
 
-<filepath="ball.png" id="ballTex" colfmt=6 />
-<filepath="ball2.png" id="ball2Tex" colfmt=6 />
-<filepath="demon.png" id="demonTex" colfmt=6 />
-<filepath="isabella.png" id="isabellaTex" colfmt=6 />
+<filepath="ball.png" id="ballTex" colfmt=5 />
+<filepath="ball2.png" id="ball2Tex" colfmt=5 />
+<filepath="isabella.png" id="isabellaTex" colfmt=4 />
+
+<filepath="outro.png" id="outroTex" colfmt=4 />
+<filepath="intro.png" id="introTex" colfmt=4 />
