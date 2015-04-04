@@ -71,7 +71,6 @@
     <ClCompile Include="src\model.c" />
     <ClCompile Include="src\object.c" />
     <ClCompile Include="src\raycast.c" />
-    <ClCompile Include="src\scene.c" />
     <ClCompile Include="src\sprite.c" />
   </ItemGroup>
   <ItemGroup>
@@ -90,7 +89,6 @@
     <ClInclude Include="include\model.h" />
     <ClInclude Include="include\object.h" />
     <ClInclude Include="include\raycast.h" />
-    <ClInclude Include="include\scene.h" />
     <ClInclude Include="include\sprite.h" />
   </ItemGroup>
   <ItemGroup>

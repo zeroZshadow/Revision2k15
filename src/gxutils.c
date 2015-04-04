@@ -30,7 +30,7 @@ void GXU_init() {
 	VIDEO_Init();
 
 	/* Get render mode */
-	rmode = VIDEO_GetPreferredMode(NULL); //&TVPal528Int
+	rmode = VIDEO_GetPreferredMode(&TVPal528Int);
 
 	/* Allocate the fifo buffer */
 	gpfifo = memalign(32, DEFAULT_FIFO_SIZE);
@@ -50,10 +50,6 @@ void GXU_init() {
 	VIDEO_Flush();
 	VIDEO_WaitVSync();
 	if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
-
-	/* Enable USBGecko debugging */
-	//CON_EnableGecko(1, FALSE);
-	//CON_InitEx(rmode, 0, 0, rmode->viWidth, rmode->xfbHeight);
 
 	/* Set aspect ratio */
 	aspectRatio = 4.f / 3.f;
@@ -103,6 +99,13 @@ void GXU_init() {
 	first_frame = TRUE;
 
 	GXU_SetViewport(0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
+
+	/* Enable console */
+	//CON_InitEx(rmode, 0, 0, rmode->viWidth, rmode->xfbHeight);
+}
+
+void GXU_closeTPL() {
+	TPL_CloseTPLFile(&TPLfile);
 }
 
 void GXU_loadTexture(s32 texId, GXTexObj* texObj) {

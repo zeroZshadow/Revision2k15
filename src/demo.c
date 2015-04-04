@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include <gccore.h>
 #include <math.h>
+#include <stdio.h>
 
 //Structures
 #include "audioutil.h"
@@ -22,6 +23,7 @@
 
 /* Data vars */
 GXTexObj whiteTexObj, fontTexObj;
+sprite_t *spriteFade;
 font_t* font;
 
 //Scene 1
@@ -44,9 +46,14 @@ sprite_t *spriteZombie;
 GXTexObj ballTexObj[2], demonTexObj;
 sprite_t *spriteBall[8], *spriteDemon;
 
+//Scene timing and index
 s32 sceneoffset = 0;
 s32 scenetime = 0;
-u8 scenecount = 0;
+s32 subscenetime = 0;
+u8 scenecount = -1;
+
+//Fade info
+s32 fadestart = -1;
 
 /* Light */
 static GXColor lightColor[] = {
@@ -101,6 +108,8 @@ void DEMO_init() {
 	GX_InitTexObjFilterMode(&ballTexObj[1], GX_NEAR, GX_NEAR); //Point filtering
 	GXU_loadTexture(isabellaTex, &demonTexObj);
 
+	GXU_closeTPL();
+
 	//Invalidate texture cache
 	GX_InvalidateTexAll();
 
@@ -116,6 +125,8 @@ void DEMO_init() {
 	spriteMagicback = SPRITE_create(0, 0, -10, 640, 528, &magicbackTexObj);
 	spriteZombie = SPRITE_create(0, 0, -80, 640, 528, &zombieTexObj);
 	spriteDemon = SPRITE_create(0, 0, -280, 640, 528, &demonTexObj);
+
+	spriteFade = SPRITE_create(0, 0, -1, 640, 528, &whiteTexObj);
 
 	for (i = 0; i < 8; i++) {
 		spriteBall[i] = SPRITE_create(640 / 2, 528 / 2, -50, 32, 32, &ballTexObj[i%2]);
@@ -144,73 +155,138 @@ void DEMO_init() {
 
 	//Start music
 	AU_playMusic(music_ogg, music_ogg_size);
-	AU_setVolume(255); //TODO: REMOVE
+	AU_setVolume(0); //TODO: REMOVE
 }
 
-//#define SCENEID 4
+// 0 WHITE GIRL
+// 1 WIZARD
+// 2 DARK GIRL
+// 3 SPRITES
+
+u32 scriptIndex = 0;
+const s32 scriptList[] = {
+	SCENE, 2,	//DARKGIRL
+	WAITTILL, 19500,
+	FADESLIDEOUT, 500,
+	SCENE, 1,	//WIZARD
+	FADEIN, 500,
+	WAITTILL, 37851,
+	SCENE, 0,	//WHITEGIRL
+	WAITTILL, 54500,
+	FADEOUT, 500,
+	SCENE, 3,	//SPRITES
+	FADESLIDEIN, 500,
+	WAITTILL, 75000,
+	FADEOUT, 5000,
+	EXIT
+};
+
+BOOL DEMO_script() {
+	s32 t;
+
+	if (scriptIndex >= sizeof(scriptList)) {
+		return TRUE;
+	} else {
+		BOOL loop;
+		do {
+			loop = FALSE;
+			const s32 cmd = scriptList[scriptIndex];
+			switch (cmd) {
+			case SCENE:
+				//Grab param
+				scenecount = scriptList[scriptIndex + 1];
+				sceneoffset = scenetime;
+				scriptIndex += 2;
+				loop = TRUE;
+				break;
+			case WAITTILL:
+				//Grab param
+				t = scriptList[scriptIndex + 1];
+				if (scenetime >= t) {
+					scriptIndex += 2;
+					loop = TRUE;
+				}
+				break;
+			case FADESLIDEIN:
+			case FADESLIDEOUT:
+			case FADEIN:
+			case FADEOUT:
+				//Param
+				t = scriptList[scriptIndex + 1];
+
+				//First run, setup
+				if (fadestart < 0) {
+					fadestart = scenetime;
+				}
+
+				BOOL r = FALSE;
+
+				switch (cmd) {
+				case FADESLIDEIN:
+					r = DEMO_fadeSlideIn(t); break;
+				case FADESLIDEOUT:
+					r = DEMO_fadeSlideOut(t); break;
+				case FADEIN:
+					r = DEMO_fadeIn(t); break;
+				case FADEOUT:
+					r = DEMO_fadeOut(t); break;
+				}
+
+				if (r) {
+					fadestart = -1;
+					scriptIndex += 2;
+					loop = TRUE;
+				}
+				break;
+			default:
+				scriptIndex++;
+				return TRUE;
+			}
+		} while (loop);
+	}
+
+	return FALSE;
+}
 
 void DEMO_update() {
 	scenetime = AU_getPos();
+	subscenetime = scenetime - sceneoffset;
 
-#ifdef SCENEID
-	UPDATE();
-#else
 	switch (scenecount) {
-	case 0:
-		DEMO_update_scene2();
-		if (scenetime > 17851) {
-			sceneoffset = 17851;
-			scenecount++;
-		} //Timing done!
-		break;
-	case 1:
-		DEMO_update_scene1();
-		if (scenetime > 40000) {
-			sceneoffset = 40000;
-			scenecount++;
-		}
-			break;
-	case 2:
-		DEMO_update_scene3();
-		if (scenetime > 80000) {
-			sceneoffset = 80000;
-			scenecount++;
-		}
-			break;
-	case 3:
-		DEMO_update_scene4();
-		break;
+	case 0:	DEMO_update_scene0();break;
+	case 1:	DEMO_update_scene1();break;
+	case 2:	DEMO_update_scene2();break;
+	case 3:	DEMO_update_scene3();break;
 	}
-#endif
 }
 
 void DEMO_render(camera_t* mainCamera, Mtx viewMtx) {
-#ifdef SCENEID
-	RENDER(mainCamera, viewMtx);
-#else
 	switch (scenecount) {
-	case 0: DEMO_render_scene2(mainCamera, viewMtx); break;
+	case 0: DEMO_render_scene0(mainCamera, viewMtx); break;
 	case 1: DEMO_render_scene1(mainCamera, viewMtx); break;
-	case 2: DEMO_render_scene3(mainCamera, viewMtx); break;
-	case 3: DEMO_render_scene4(mainCamera, viewMtx); break;
+	case 2: DEMO_render_scene2(mainCamera, viewMtx); break;
+	case 3: DEMO_render_scene3(mainCamera, viewMtx); break;
 	}
-#endif
 }
 
-void DEMO_update_scene1() {
+void DEMO_update_scene0() {
+	//popin scaler
+	f32 popin = subscenetime / 1000.0f; popin = (popin > 1.0f ? 1.0f : popin) * 0.2f;
+
 	//Move mines around
 	u32 i;
 	for (i = 0; i < 3; ++i) {
-		f32 prog = (scenetime * 0.001f) + (i * 5);
+		f32 prog = (subscenetime * 0.001f) + (i * 5);
 		OBJECT_rotateTo(objectMine[i], sin(prog) * 2 + prog, cos(prog) * 3, 0);
 		f32 xoffset = (sin(prog * 1.3f) * 0.8f + (i * 0.3f) - 0.3f) * 20.0f;
 		f32 yoffset = (cos(prog) * 0.5f + (i * 0.2f) - 0.2f) * 20.0f;
 		f32 zoffset = cos(prog * 3) * 20.0f;
 		OBJECT_moveTo(objectMine[i], xoffset, yoffset, -50 + zoffset);
+		OBJECT_scaleTo(objectMine[i], popin, popin, popin);
 	}
 }
 
-void DEMO_render_scene1(camera_t* mainCamera, Mtx viewMtx) {
+void DEMO_render_scene0(camera_t* mainCamera, Mtx viewMtx) {
 	u32 i;
 
 	/* Render bitmaps */
@@ -230,8 +306,8 @@ void DEMO_render_scene1(camera_t* mainCamera, Mtx viewMtx) {
 	SPRITE_render(spriteBackground);
 }
 
-void DEMO_update_scene2() {
-	f32 prog = scenetime * 0.001f;
+void DEMO_update_scene1() {
+	f32 prog = subscenetime * 0.001f;
 	u32 i;
 	for (i = 0; i < cubeCount; ++i) {
 		f32 p = i <= (cubeCount >> 1) ? prog : -prog;
@@ -254,7 +330,7 @@ void DEMO_update_scene2() {
 	OBJECT_scaleTo(objectGrow, scale, scale, scale);
 }
 
-void DEMO_render_scene2(camera_t* mainCamera, Mtx viewMtx) {
+void DEMO_render_scene1(camera_t* mainCamera, Mtx viewMtx) {
 	u32 i;
 
 	/* Background */
@@ -285,15 +361,17 @@ void DEMO_render_scene2(camera_t* mainCamera, Mtx viewMtx) {
 	SPRITE_render(spriteForeground);
 }
 
-void DEMO_update_scene3() {
+void DEMO_update_scene2() {
+	f32 prog = subscenetime * 0.005f;
+
 	//rotate the cube
-	OBJECT_rotate(objectGothic, 0.02f, 0, 0);
-	OBJECT_rotate(objectGothic, 0, 0.01f, 0);
+	OBJECT_rotateTo(objectGothic, prog * 0.1f, prog * 0.5f, 0);
 }
 
-void DEMO_render_scene3(camera_t* mainCamera, Mtx viewMtx) {
+void DEMO_render_scene2(camera_t* mainCamera, Mtx viewMtx) {
 	/* Render bitmaps */
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+	GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
 	SPRITE_render(spriteZombie);
 
 	/* Draw objects */
@@ -306,7 +384,7 @@ void DEMO_render_scene3(camera_t* mainCamera, Mtx viewMtx) {
 	/* Disable font */
 	GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
 	GXRModeObj* rmode = GXU_getMode();
-	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (scenetime * 0.1f), rmode->viHeight - 120, 0, 0.5f, 8, scenetime * 0.005f);
+	FONT_drawScroller(font, "Aww yeah a brand new DeSiRe demo for the GameCube", rmode->viWidth - (subscenetime * 0.1f), rmode->viHeight - 120, 0, 0.5f, 8, subscenetime * 0.005f);
 }
 
 u32 spriteID[8];
@@ -337,13 +415,13 @@ void SortSprites() {
 	}
 }
 
-void DEMO_update_scene4() {
+void DEMO_update_scene3() {
 	u32 i;
 	GXRModeObj* rmode = GXU_getMode();
 	const float hwidth = rmode->viWidth / 2;
 	const float hheight = rmode->xfbHeight / 2;
 
-	const f32 prog = scenetime * 0.002f;
+	const f32 prog = subscenetime * 0.002f;
 
 	Mtx mat1, mat2;
 	guQuaternion quat;
@@ -381,7 +459,7 @@ void DEMO_update_scene4() {
 	SortSprites();
 }
 
-void DEMO_render_scene4(camera_t* mainCamera, Mtx viewMtx) {
+void DEMO_render_scene3(camera_t* mainCamera, Mtx viewMtx) {
 	u32 i;
 
 	/* Render bitmaps */
@@ -395,4 +473,64 @@ void DEMO_render_scene4(camera_t* mainCamera, Mtx viewMtx) {
 	for (i = 0; i < 8; ++i) {
 		SPRITE_render(spriteBall[spriteID[i]]);
 	}
+}
+
+BOOL DEMO_fadeSlideOut(s32 length) {
+	f32 prog = (f32)(scenetime - fadestart) / (f32)length;
+	if (prog >= 1.0f) {
+		return TRUE;
+	} else {
+		GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+		SPRITE_moveTo(spriteFade, -640 + prog * 640, 0, -1);
+		SPRITE_color(spriteFade, (GXColor) { 0, 0, 0, 0xff });
+		SPRITE_render(spriteFade); //Colorize alter alpha
+	}
+
+	return FALSE;
+}
+
+BOOL DEMO_fadeSlideIn(s32 length) {
+	f32 prog = (f32)(scenetime - fadestart) / (f32)length;
+	if (prog >= 1.0f) {
+		return TRUE;
+	} else {
+		GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+		SPRITE_moveTo(spriteFade, prog * 640, 0, -1);
+		SPRITE_color(spriteFade, (GXColor) { 0, 0, 0, 0xff });
+		SPRITE_render(spriteFade); //Colorize alter alpha
+	}
+
+	return FALSE;
+}
+
+BOOL DEMO_fadeOut(s32 length) {
+	f32 prog = (f32)(scenetime - fadestart) / (f32)length;
+	if (prog > 1.0f) {
+		return TRUE;
+	} else {
+		GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+		SPRITE_moveTo(spriteFade, 0, 0, -1);
+		SPRITE_color(spriteFade, (GXColor) { 0, 0, 0, (u8)(prog * 255) });
+		SPRITE_render(spriteFade); //Colorize alter alpha
+	}
+
+	return FALSE;
+}
+
+BOOL DEMO_fadeIn(s32 length) {
+	f32 prog = (f32)(scenetime - fadestart) / (f32)length;
+	if (prog > 1.0f) {
+		return TRUE;
+	} else {
+		GX_SetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
+		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
+		SPRITE_moveTo(spriteFade, 0, 0, -1);
+		SPRITE_color(spriteFade, (GXColor) { 0, 0, 0, (u8)((1.0f - prog) * 255) });
+		SPRITE_render(spriteFade); //Colorize alter alpha
+	}
+
+	return FALSE;
 }

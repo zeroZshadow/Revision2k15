@@ -6,7 +6,16 @@
 #define _GXUTILS_H
 
 #include <gccore.h>
-#include "scene.h"
+
+
+typedef struct {
+	guVector position;       /*< Camera position    */
+	f32      width,          /*< Viewport width     */
+		height,         /*< Viewport height    */
+		offsetTop,      /*< Viewport Y         */
+		offsetLeft;     /*< Viewport X         */
+	Mtx44    perspectiveMtx; /*< Perspective Matrix */
+} camera_t;
 
 /*! Texture sizes for sprites and fonts */
 typedef f32 TexSize;
@@ -15,6 +24,8 @@ extern const TexSize TexSize256;
 /*! \brief Initialize the GX subsystem
  */
 void GXU_init();
+
+void GXU_closeTPL();
 
 /*! \brief Load texture from Id
  *  \param[in]  texId  Texture Id, from generated assets

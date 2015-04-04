@@ -30,10 +30,10 @@ TEXTURES	:=	textures
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS		= -g -O2 -Wall -Wextra $(MACHDEP) $(INCLUDE) -DGEKKO
+CFLAGS		= -g -O3 -Wall -Wimplicit-function-declaration -Werror $(MACHDEP) $(INCLUDE) -DGEKKO -fdata-sections -ffunction-sections
 CXXFLAGS	= $(CFLAGS)
 
-LDFLAGS		= -g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+LDFLAGS		= -g $(MACHDEP) -Wl,--gc-sections,-Map,$(notdir $@).map
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
@@ -111,7 +111,7 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-	@dollz3 $(OUTPUT).dol $(OUTPUT).mini.dol 
+#	@dollz3 $(OUTPUT).dol $(OUTPUT).mini.dol 
 
 #---------------------------------------------------------------------------------
 clean:

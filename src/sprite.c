@@ -7,7 +7,7 @@ sprite_t* SPRITE_create(f32 x, f32 y, f32 depth, f32 width, f32 height, GXTexObj
 	sprite->width = width;
 	sprite->height = height;
 	sprite->texture = texture;
-	sprite->color = (GXColor) { 0xFF, 0xFF, 0xFF, 0xFF };
+	sprite->color = (GXColor) { 0xff, 0xff, 0xff, 0xff };
 
 	guMtxIdentity(sprite->transform.matrix);
 
@@ -52,7 +52,6 @@ void SPRITE_render(sprite_t* sprite) {
 
 	/* Set color and disable lighting*/
 	GX_SetChanCtrl(GX_COLOR0A0, GX_DISABLE, GX_SRC_REG, GX_SRC_REG, GX_LIGHT0, GX_DF_CLAMP, GX_AF_NONE);
-	GX_SetChanAmbColor(GX_COLOR0A0, sprite->color);
 	GX_SetChanMatColor(GX_COLOR0A0, sprite->color);
 
 	/* Vtx descriptors reset and set */
@@ -63,7 +62,7 @@ void SPRITE_render(sprite_t* sprite) {
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 
 	/* Lighting off, Alpha blend */
-	GX_SetNumChans(1);
+	GX_SetNumChans(2);
 
 	/* Orthographic mode */
 	GXU_2DMode();
@@ -73,12 +72,15 @@ void SPRITE_render(sprite_t* sprite) {
 	/* Top left */
 	GX_Position2f32(0, 0);
 	GX_TexCoord2f32(0, 0);
+
 	/* Bottom left */
 	GX_Position2f32(0, sprite->height);
 	GX_TexCoord2f32(0, 1);
+
 	/* Bottom right */
 	GX_Position2f32(sprite->width, sprite->height);
 	GX_TexCoord2f32(1, 1);
+
 	/* Top right */
 	GX_Position2f32(sprite->width, 0);
 	GX_TexCoord2f32(1, 0);
