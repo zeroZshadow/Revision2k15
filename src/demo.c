@@ -96,6 +96,7 @@ void DEMO_init() {
 	GXU_loadTexture(whiteTex, &whiteTexObj);
 	GXU_loadTexture(fontTex, &fontTexObj);
 	GXU_loadTexture(font2Tex, &font2TexObj);
+	GX_InitTexObjWrapMode(&font2TexObj, GX_CLAMP, GX_CLAMP); //Point filtering
 	//Scene 0
 	GXU_loadTexture(backTex, &backTexObj);
 	GXU_loadTexture(foreTex, &foreTexObj);
@@ -127,7 +128,6 @@ void DEMO_init() {
 	modelRevision = MODEL_setup(revision_bmb, &whiteTexObj);
 
 	//Sprites
-	//GXRModeObj* rmode = GXU_getMode();
 	spriteBackground = SPRITE_create(0, 0, -10, 640, 528, &backTexObj);
 	spriteForeground = SPRITE_create(0, 0, -10, 640, 528, &foreTexObj);
 	spriteMagician = SPRITE_create(0, 0, -10, 640, 528, &magicianTexObj);
@@ -618,8 +618,10 @@ void DEMO_update_scene5() {
 }
 
 static GXColor lightRevision[] = {
-	{ 0xeb, 0x6c, 0x05, 0xFF }, /* Light color 1 */
-	{ 0x66, 0x66, 0x66, 0xFF }, /* Ambient 1 */
+	//{ 0xeb, 0x6c, 0x05, 0xFF }, /* Light color 1 */
+	{ 0xb4, 0x34, 0x11, 0xFF }, /* Light color 1 */
+	//{ 0x66, 0x66, 0x66, 0xFF }, /* Ambient 1 */
+	{ 0x11, 0x00, 0x00, 0xFF }, /* Ambient 1 */
 	{ 0xFF, 0xFF, 0xFF, 0xFF }  /* Material 1 */
 };
 
